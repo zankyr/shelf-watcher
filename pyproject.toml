@@ -1,7 +1,22 @@
 [project]
 name = "shelf-watcher"
 version = "0.1.0"
-description = "Add your description here"
+description = "Grocery Receipt Tracker - Track receipt history, analyze price trends, and visualize spending patterns"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "pandas>=2.3.3",
+    "plotly>=6.5.1",
+    "pydantic>=2.12.5",
+    "sqlalchemy>=2.0.45",
+    "streamlit>=1.52.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "black>=24.0.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+]
