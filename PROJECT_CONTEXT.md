@@ -180,7 +180,14 @@ CREATE INDEX idx_receipts_store ON receipts(store);
 ### Phase 1: Core MVP (Current Focus)
 
 **Sprint 1: Foundation (Week 1)**
-- [ ] Project setup with uv
+- [x] Project setup with uv
+  - [x] Python 3.13 configured
+  - [x] Core dependencies added (streamlit, pandas, plotly, sqlalchemy, pydantic)
+  - [x] Dev dependencies added (pytest, pytest-cov, black, ruff, mypy)
+  - [x] All dependencies installed
+  - [x] Basic README.md created
+  - [ ] Tool configurations in pyproject.toml (black, ruff, mypy, pytest)
+  - [ ] Directory structure created
 - [ ] Database schema implementation
 - [ ] Basic CRUD operations
 - [ ] Unit tests for database layer
@@ -538,6 +545,6 @@ When helping with this project:
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2026-01-07  
-**Status**: Phase 1 - Planning Complete, Ready for Implementation
+**Document Version**: 1.1
+**Last Updated**: 2026-01-07
+**Status**: Phase 1, Sprint 1 - In Progress (Dependencies Installed, Configs Pending)
