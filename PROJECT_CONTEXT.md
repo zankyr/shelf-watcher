@@ -187,7 +187,8 @@ CREATE INDEX idx_receipts_store ON receipts(store);
   - [x] All dependencies installed
   - [x] Basic README.md created
   - [x] Tool configurations in pyproject.toml (black, ruff, mypy, pytest)
-  - [ ] Directory structure created
+  - [x] Directory structure created (src/, tests/, data/, docs/ with __init__.py files)
+  - [x] Updated .gitignore for project-specific files
 - [ ] Database schema implementation
 - [ ] Basic CRUD operations
 - [ ] Unit tests for database layer

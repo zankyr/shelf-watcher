@@ -137,3 +137,13 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Project-specific: Grocery Receipt Tracker
+# Database files
+*.db
+*.sqlite
+*.sqlite3-shm
+*.sqlite3-wal
+
+# User data directory (keep structure, ignore contents)
+data/*
+!data/.gitkeep
