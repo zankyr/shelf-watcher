@@ -186,7 +186,7 @@ CREATE INDEX idx_receipts_store ON receipts(store);
   - [x] Dev dependencies added (pytest, pytest-cov, black, ruff, mypy)
   - [x] All dependencies installed
   - [x] Basic README.md created
-  - [ ] Tool configurations in pyproject.toml (black, ruff, mypy, pytest)
+  - [x] Tool configurations in pyproject.toml (black, ruff, mypy, pytest)
   - [ ] Directory structure created
 - [ ] Database schema implementation
 - [ ] Basic CRUD operations
