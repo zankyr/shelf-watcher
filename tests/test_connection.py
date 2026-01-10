@@ -11,6 +11,7 @@ from src.database.connection import (
     DATABASE_URL,
     PROJECT_ROOT,
     Base,
+    SessionLocal,
     _find_project_root,
     engine,
     get_db,
@@ -90,24 +91,29 @@ class TestEngine:
 
 
 class TestSessionLocal:
-    """Tests for session factory using isolated in-memory databases."""
+    """Tests for session factory."""
 
-    def test_session_factory_creates_session(self) -> None:
-        """Verify sessionmaker creates a valid session."""
+    def test_exported_session_local_creates_session(self) -> None:
+        """Verify the exported SessionLocal creates a valid session.
+
+        Note: Integration test using production session factory to verify
+        actual configuration. Query is read-only and does not access
+        application tables.
+        """
+        session = SessionLocal()
+        assert isinstance(session, Session)
+        # Verify session is functional with read-only query
+        result = session.execute(text("SELECT 1"))
+        assert result.scalar() == 1
+        session.close()
+
+    def test_session_factory_pattern(self) -> None:
+        """Verify sessionmaker pattern works correctly in isolation."""
         test_engine = create_engine("sqlite:///:memory:")
         test_session_factory = sessionmaker(bind=test_engine)
 
         session = test_session_factory()
         assert isinstance(session, Session)
-        session.close()
-        test_engine.dispose()
-
-    def test_session_can_execute_query(self) -> None:
-        """Verify session can execute queries."""
-        test_engine = create_engine("sqlite:///:memory:")
-        test_session_factory = sessionmaker(bind=test_engine)
-
-        session = test_session_factory()
         result = session.execute(text("SELECT 42 as answer"))
         row = result.fetchone()
         assert row is not None
