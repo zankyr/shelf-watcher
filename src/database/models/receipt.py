@@ -19,9 +19,9 @@ class Receipt(Base):
     store: Mapped[str] = mapped_column(String(255), nullable=False)
     total_amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+    created_at: Mapped[dt.datetime] = mapped_column(default=lambda: dt.datetime.now())
     updated_at: Mapped[dt.datetime] = mapped_column(
-        default=dt.datetime.now, onupdate=dt.datetime.now
+        default=lambda: dt.datetime.now(), onupdate=lambda: dt.datetime.now()
     )
 
     __table_args__ = (
