@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -10,6 +11,7 @@ from src.database.connection import (
     DATABASE_URL,
     PROJECT_ROOT,
     Base,
+    _find_project_root,
     engine,
     get_db,
 )
@@ -30,6 +32,20 @@ class TestProjectRoot:
     def test_project_root_contains_src_directory(self) -> None:
         """Verify PROJECT_ROOT contains src directory."""
         assert (PROJECT_ROOT / "src").exists()
+
+    def test_find_project_root_raises_when_pyproject_not_found(self) -> None:
+        """Verify RuntimeError is raised when pyproject.toml cannot be found."""
+        with patch("src.database.connection.Path") as mock_path:
+            # Mock Path(__file__).resolve().parent to return a mock path
+            mock_current = mock_path.return_value.resolve.return_value.parent
+            # Make the path traversal reach root (parent equals self)
+            mock_current.parent = mock_current
+            # pyproject.toml never exists
+            mock_current.__truediv__ = lambda self, x: mock_path.return_value
+            mock_path.return_value.exists.return_value = False
+
+            with pytest.raises(RuntimeError, match="Could not find project root"):
+                _find_project_root()
 
 
 class TestDatabasePath:

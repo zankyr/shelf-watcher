@@ -321,10 +321,14 @@ def normalize_price(quantity: float, unit: str, total_price: float) -> tuple[flo
 ### Python Style
 - **PEP 8** compliance
 - **Type hints** for all function signatures
-- **Docstrings** for public functions (Google style)
+- **Docstrings** for all modules and public functions (Google style)
 - **Max line length**: 100 characters
 - **Use `pathlib`** for file paths
 - **Use `dataclasses`** or Pydantic models for data structures
+- **Use `Iterator[T]`** for simple generators (not `Generator[T, None, None]`)
+- **Use library defaults** unless there's a documented reason to deviate
+- **Fail loudly**: Raise exceptions on configuration errors, don't use silent fallbacks
+- **Auto-create directories**: When writing files, ensure parent directories exist
 
 ### Naming Conventions
 - Variables/functions: `snake_case`
@@ -336,12 +340,17 @@ def normalize_price(quantity: float, unit: str, total_price: float) -> tuple[flo
 - Table names: plural, lowercase (e.g., `receipts`, `items`)
 - Column names: `snake_case`
 - Always use parameterized queries (prevent SQL injection)
+- **SQLite for Streamlit**: Use `check_same_thread=False` and `timeout=30` for multi-threading
+- **Environment config**: Make debug settings (like `echo`) configurable via environment variables
 
 ### Testing
 - Test file names: `test_*.py`
 - Test functions: `test_<functionality>`
 - Use fixtures for database setup
 - Aim for >80% coverage on business logic
+- **Test actual exports**: If testing `SessionLocal`, import and test the real object, not a recreated pattern
+- **Use in-memory databases**: Use `sqlite:///:memory:` for test isolation, avoid production database
+- **Verify behavior, not just existence**: Tests should assert actual behavior (e.g., mock to verify `close()` was called)
 
 ### Git Workflow
 - Commit messages: Conventional Commits format
