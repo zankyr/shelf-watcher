@@ -43,7 +43,7 @@ class TestProjectRoot:
             # Make the path traversal reach root (parent equals self)
             mock_current.parent = mock_current
             # pyproject.toml never exists
-            mock_current.__truediv__ = lambda self, x: mock_path.return_value
+            mock_current.__truediv__ = lambda path_obj, x: mock_path.return_value
             mock_path.return_value.exists.return_value = False
 
             with pytest.raises(RuntimeError, match="Could not find project root"):
