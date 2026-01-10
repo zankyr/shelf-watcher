@@ -6,9 +6,27 @@ from sqlalchemy.orm import Session, sessionmaker
 from src.database.connection import (
     DATABASE_PATH,
     DATABASE_URL,
+    PROJECT_ROOT,
     Base,
     get_db,
 )
+
+
+class TestProjectRoot:
+    """Tests for project root detection."""
+
+    def test_project_root_exists(self) -> None:
+        """Verify PROJECT_ROOT points to an existing directory."""
+        assert PROJECT_ROOT.exists()
+        assert PROJECT_ROOT.is_dir()
+
+    def test_project_root_contains_pyproject_toml(self) -> None:
+        """Verify PROJECT_ROOT contains pyproject.toml."""
+        assert (PROJECT_ROOT / "pyproject.toml").exists()
+
+    def test_project_root_contains_src_directory(self) -> None:
+        """Verify PROJECT_ROOT contains src directory."""
+        assert (PROJECT_ROOT / "src").exists()
 
 
 class TestDatabasePath:

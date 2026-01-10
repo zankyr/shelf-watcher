@@ -4,8 +4,25 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
-# Database file location
-DATABASE_PATH = Path(__file__).parent.parent.parent / "data" / "receipts.db"
+
+def _find_project_root() -> Path:
+    """Find the project root by looking for pyproject.toml.
+
+    Traverses up from the current file until pyproject.toml is found.
+    This is more robust than using relative parent paths.
+    """
+    current = Path(__file__).resolve().parent
+    while current != current.parent:
+        if (current / "pyproject.toml").exists():
+            return current
+        current = current.parent
+    # Fallback: if not found, use the file's grandparent (original behavior)
+    return Path(__file__).resolve().parent.parent.parent
+
+
+# Project root and database file location
+PROJECT_ROOT = _find_project_root()
+DATABASE_PATH = PROJECT_ROOT / "data" / "receipts.db"
 DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
 # SQLAlchemy engine
