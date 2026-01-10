@@ -1,4 +1,10 @@
-from collections.abc import Generator
+"""Database connection and session management for the Grocery Receipt Tracker.
+
+Provides SQLAlchemy engine, session factory, and declarative base for ORM models.
+The database file is stored in the project's data/ directory.
+"""
+
+from collections.abc import Iterator
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -35,7 +41,7 @@ SessionLocal = sessionmaker(autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-def get_db() -> Generator[Session]:
+def get_db() -> Iterator[Session]:
     """Dependency that provides a database session."""
     db = SessionLocal()
     try:

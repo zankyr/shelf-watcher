@@ -8,6 +8,7 @@ from src.database.connection import (
     DATABASE_URL,
     PROJECT_ROOT,
     Base,
+    engine,
     get_db,
 )
 
@@ -48,9 +49,16 @@ class TestDatabasePath:
 class TestEngine:
     """Tests for SQLAlchemy engine."""
 
-    def test_engine_can_execute_query(self) -> None:
-        """Verify engine can execute a simple query."""
-        # Use in-memory database for test isolation
+    def test_exported_engine_can_connect(self) -> None:
+        """Verify the exported engine object can establish a connection."""
+        # Test the actual engine exported from connection module
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT 1"))
+            assert result.scalar() == 1
+
+    def test_engine_creation_pattern(self) -> None:
+        """Verify SQLAlchemy engine creation pattern works correctly."""
+        # Use in-memory database for isolated pattern testing
         test_engine = create_engine("sqlite:///:memory:")
         with test_engine.connect() as conn:
             result = conn.execute(text("SELECT 1"))
