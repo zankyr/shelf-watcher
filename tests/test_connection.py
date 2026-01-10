@@ -14,6 +14,7 @@ from src.database.connection import (
     _find_project_root,
     engine,
     get_db,
+    init_db,
 )
 
 
@@ -167,19 +168,19 @@ class TestGetDb:
 
 
 class TestInitDb:
-    """Tests for init_db function.
+    """Tests for init_db function."""
 
-    Note: We test the table creation logic using an isolated in-memory database
-    rather than calling init_db() directly, which would affect the real database.
-    """
+    def test_init_db_calls_create_all_with_engine(self) -> None:
+        """Verify init_db calls Base.metadata.create_all with the engine."""
+        with patch.object(Base.metadata, "create_all") as mock_create_all:
+            init_db()
+            mock_create_all.assert_called_once_with(bind=engine)
 
     def test_create_all_runs_without_error(self) -> None:
         """Verify Base.metadata.create_all runs without error."""
-        # Use isolated in-memory database
+        # Use isolated in-memory database for pattern testing
         test_engine = create_engine("sqlite:///:memory:")
 
-        # This mirrors what init_db() does internally
-        # Currently no models, so no tables created
         Base.metadata.create_all(bind=test_engine)
 
         # Verify no error occurred (tables list may be empty)
