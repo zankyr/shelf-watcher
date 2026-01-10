@@ -29,7 +29,7 @@ DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 engine = create_engine(DATABASE_URL, echo=False)
 
 # Session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autoflush=False, bind=engine)
 
 # Base class for models
 Base = declarative_base()
