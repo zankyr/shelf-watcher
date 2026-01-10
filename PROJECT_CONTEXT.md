@@ -199,10 +199,13 @@ CREATE INDEX idx_receipts_store ON receipts(store);
 - [ ] Database models (incremental, one per branch)
   - [ ] Store model
   - [ ] Category model
-  - [ ] Receipt model
+  - [x] Receipt model (basic, no relationships yet)
   - [ ] Item model
-- [ ] Basic CRUD operations
-- [ ] Unit tests for CRUD layer
+- [ ] CRUD operations
+  - [x] Receipt CRUD (create_receipt, get_receipt, get_receipts)
+  - [ ] Store CRUD
+  - [ ] Category CRUD
+  - [ ] Item CRUD
 
 **Sprint 2: Data Entry (Week 2)**
 - [ ] Streamlit app structure
@@ -557,6 +560,6 @@ When helping with this project:
 
 ---
 
-**Document Version**: 1.4
+**Document Version**: 1.5
 **Last Updated**: 2026-01-10
-**Status**: Phase 1, Sprint 1 - In Progress (Database Connection Complete, Models Next)
+**Status**: Phase 1, Sprint 1 - In Progress (Receipt Model + CRUD Complete)
