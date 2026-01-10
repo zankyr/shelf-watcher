@@ -1,6 +1,6 @@
 """Unit tests for database connection module."""
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.database.connection import (
@@ -8,7 +8,6 @@ from src.database.connection import (
     DATABASE_URL,
     Base,
     get_db,
-    init_db,
 )
 
 
@@ -77,9 +76,11 @@ class TestBase:
         assert hasattr(Base, "metadata")
 
     def test_base_metadata_is_empty_initially(self) -> None:
-        """Verify Base metadata has no tables (models removed)."""
-        # Note: This test will fail once we add models
-        # That's expected - update or remove this test then
+        """Verify Base metadata has no tables (no models yet).
+
+        Note: This test will fail once models are added.
+        Update it to check for expected tables at that point.
+        """
         assert len(Base.metadata.tables) == 0
 
 
@@ -117,17 +118,35 @@ class TestGetDb:
 
 
 class TestInitDb:
-    """Tests for init_db function."""
+    """Tests for init_db function.
 
-    def test_init_db_runs_without_error(self) -> None:
-        """Verify init_db executes without raising exceptions."""
-        # This should not raise any exceptions
-        # Currently creates no tables (no models), but validates the function works
-        init_db()
+    Note: We test the table creation logic using an isolated in-memory database
+    rather than calling init_db() directly, which would affect the real database.
+    """
 
-    def test_init_db_is_idempotent(self) -> None:
-        """Verify init_db can be called multiple times safely."""
+    def test_create_all_runs_without_error(self) -> None:
+        """Verify Base.metadata.create_all runs without error."""
+        # Use isolated in-memory database
+        test_engine = create_engine("sqlite:///:memory:")
+
+        # This mirrors what init_db() does internally
+        # Currently no models, so no tables created
+        Base.metadata.create_all(bind=test_engine)
+
+        # Verify no error occurred (tables list may be empty)
+        inspector = inspect(test_engine)
+        tables = inspector.get_table_names()
+        assert isinstance(tables, list)
+
+        test_engine.dispose()
+
+    def test_create_all_is_idempotent(self) -> None:
+        """Verify create_all can be called multiple times safely."""
+        test_engine = create_engine("sqlite:///:memory:")
+
         # Should not raise on repeated calls
-        init_db()
-        init_db()
-        init_db()
+        Base.metadata.create_all(bind=test_engine)
+        Base.metadata.create_all(bind=test_engine)
+        Base.metadata.create_all(bind=test_engine)
+
+        test_engine.dispose()
