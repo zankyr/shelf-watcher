@@ -36,11 +36,12 @@ DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
 # SQLAlchemy engine (set SQLALCHEMY_ECHO=1 for SQL query logging)
 # check_same_thread=False is required for Streamlit's multi-threaded environment
+# timeout=30 helps prevent database lock errors in concurrent scenarios
 _echo = os.getenv("SQLALCHEMY_ECHO", "").lower() in ("1", "true", "yes")
 engine = create_engine(
     DATABASE_URL,
     echo=_echo,
-    connect_args={"check_same_thread": False},
+    connect_args={"check_same_thread": False, "timeout": 30},
 )
 
 # Session factory
@@ -60,11 +61,5 @@ def get_db() -> Iterator[Session]:
 
 
 def init_db() -> None:
-    """Create all tables in the database.
-
-    Raises:
-        sqlalchemy.exc.OperationalError: If database file cannot be created
-            (e.g., permission denied, disk full, invalid path).
-        sqlalchemy.exc.SQLAlchemyError: For other database-related errors.
-    """
+    """Create all tables in the database."""
     Base.metadata.create_all(bind=engine)
