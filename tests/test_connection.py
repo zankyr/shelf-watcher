@@ -89,6 +89,15 @@ class TestEngine:
             assert result.scalar() == 1
         test_engine.dispose()
 
+    def test_engine_can_execute_query(self) -> None:
+        """Verify engine can execute a simple query."""
+        # Use in-memory database for test isolation
+        test_engine = create_engine("sqlite:///:memory:")
+        with test_engine.connect() as conn:
+            result = conn.execute(text("SELECT 1"))
+            assert result.scalar() == 1
+        test_engine.dispose()
+
 
 class TestSessionLocal:
     """Tests for session factory."""
@@ -121,6 +130,30 @@ class TestSessionLocal:
         session.close()
         test_engine.dispose()
 
+    def test_session_local_creates_session(self) -> None:
+        """Verify SessionLocal creates a valid session."""
+        # Create isolated test session factory
+        test_engine = create_engine("sqlite:///:memory:")
+        test_session_factory = sessionmaker(bind=test_engine)
+
+        session = test_session_factory()
+        assert isinstance(session, Session)
+        session.close()
+        test_engine.dispose()
+
+    def test_session_can_execute_query(self) -> None:
+        """Verify session can execute queries."""
+        test_engine = create_engine("sqlite:///:memory:")
+        test_session_factory = sessionmaker(bind=test_engine)
+
+        session = test_session_factory()
+        result = session.execute(text("SELECT 42 as answer"))
+        row = result.fetchone()
+        assert row is not None
+        assert row[0] == 42
+        session.close()
+        test_engine.dispose()
+
 
 class TestBase:
     """Tests for declarative base."""
@@ -134,6 +167,13 @@ class TestBase:
         assert hasattr(Base.metadata, "tables")
         # tables should be dict-like (works whether empty or with models)
         assert hasattr(Base.metadata.tables, "keys")
+
+    def test_base_metadata_has_receipts_table(self) -> None:
+        """Verify Base metadata includes the receipts table."""
+        # Import models to ensure they're registered with Base
+        from src.database.models import Receipt  # noqa: F401
+
+        assert "receipts" in Base.metadata.tables
 
 
 class TestGetDb:

@@ -191,9 +191,21 @@ CREATE INDEX idx_receipts_store ON receipts(store);
   - [x] Updated .gitignore for project-specific files
   - [x] Pre-commit hooks configured and installed
   - [x] Makefile created with common development commands
-- [ ] Database schema implementation
-- [ ] Basic CRUD operations
-- [ ] Unit tests for database layer
+- [x] Database connection module (src/database/connection.py)
+  - [x] SQLAlchemy engine, SessionLocal, Base
+  - [x] get_db() dependency for session management
+  - [x] init_db() for table creation
+  - [x] Unit tests with 100% coverage
+- [ ] Database models (incremental, one per branch)
+  - [ ] Store model
+  - [ ] Category model
+  - [x] Receipt model (basic, no relationships yet)
+  - [ ] Item model
+- [ ] CRUD operations
+  - [x] Receipt CRUD (create_receipt, get_receipt, get_receipts)
+  - [ ] Store CRUD
+  - [ ] Category CRUD
+  - [ ] Item CRUD
 
 **Sprint 2: Data Entry (Week 2)**
 - [ ] Streamlit app structure
@@ -342,6 +354,8 @@ def normalize_price(quantity: float, unit: str, total_price: float) -> tuple[flo
 - Always use parameterized queries (prevent SQL injection)
 - **SQLite for Streamlit**: Use `check_same_thread=False` and `timeout=30` for multi-threading
 - **Environment config**: Make debug settings (like `echo`) configurable via environment variables
+- **Timestamp defaults**: Use `default=lambda: dt.datetime.now()`, not `default=dt.datetime.now`
+- **Shared fixtures**: Put common test fixtures (like `db_session`) in `tests/conftest.py`
 
 ### Testing
 - Test file names: `test_*.py`
@@ -557,6 +571,6 @@ When helping with this project:
 
 ---
 
-**Document Version**: 1.3
-**Last Updated**: 2026-01-08
-**Status**: Phase 1, Sprint 1 - In Progress (Project Setup & Tooling Complete, Database Implementation Next)
+**Document Version**: 1.5
+**Last Updated**: 2026-01-10
+**Status**: Phase 1, Sprint 1 - In Progress (Receipt Model + CRUD Complete)
