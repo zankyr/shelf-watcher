@@ -348,6 +348,9 @@ def normalize_price(quantity: float, unit: str, total_price: float) -> tuple[flo
 - Table names: plural, lowercase (e.g., `receipts`, `items`)
 - Column names: `snake_case`
 - Always use parameterized queries (prevent SQL injection)
+- **SQLite for Streamlit**: Use `check_same_thread=False` and `timeout=30` for multi-threading
+- **Timestamp defaults**: Use `default=lambda: dt.datetime.now()`, not `default=dt.datetime.now`
+- **Shared fixtures**: Put common test fixtures (like `db_session`) in `tests/conftest.py`
 
 ### Testing
 - Test file names: `test_*.py`
