@@ -91,6 +91,28 @@ class TestReceiptTimestamps:
         assert receipt.updated_at is not None
         assert receipt.created_at <= receipt.updated_at
 
+    def test_updated_at_changes_on_modification(self, db_session) -> None:
+        """Test that updated_at is updated when modifying a receipt."""
+        import time
+
+        receipt = Receipt(
+            date=dt.date(2024, 1, 15),
+            store="Lidl",
+            total_amount=Decimal("10.00"),
+        )
+        db_session.add(receipt)
+        db_session.commit()
+        original_updated_at = receipt.updated_at
+
+        # Small delay to ensure timestamp difference
+        time.sleep(0.01)
+
+        # Modify the receipt
+        receipt.total_amount = Decimal("15.00")
+        db_session.commit()
+
+        assert receipt.updated_at > original_updated_at
+
 
 class TestReceiptIndexes:
     """Tests for Receipt table indexes."""
