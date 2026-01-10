@@ -76,11 +76,12 @@ class TestBase:
         """Verify Base has metadata attribute."""
         assert hasattr(Base, "metadata")
 
-    def test_base_metadata_is_empty_initially(self) -> None:
-        """Verify Base metadata has no tables (models removed)."""
-        # Note: This test will fail once we add models
-        # That's expected - update or remove this test then
-        assert len(Base.metadata.tables) == 0
+    def test_base_metadata_has_receipts_table(self) -> None:
+        """Verify Base metadata includes the receipts table."""
+        # Import models to ensure they're registered with Base
+        from src.database.models import Receipt  # noqa: F401
+
+        assert "receipts" in Base.metadata.tables
 
 
 class TestGetDb:

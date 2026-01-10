@@ -191,9 +191,18 @@ CREATE INDEX idx_receipts_store ON receipts(store);
   - [x] Updated .gitignore for project-specific files
   - [x] Pre-commit hooks configured and installed
   - [x] Makefile created with common development commands
-- [ ] Database schema implementation
+- [x] Database connection module (src/database/connection.py)
+  - [x] SQLAlchemy engine, SessionLocal, Base
+  - [x] get_db() dependency for session management
+  - [x] init_db() for table creation
+  - [x] Unit tests with 100% coverage
+- [ ] Database models (incremental, one per branch)
+  - [ ] Store model
+  - [ ] Category model
+  - [ ] Receipt model
+  - [ ] Item model
 - [ ] Basic CRUD operations
-- [ ] Unit tests for database layer
+- [ ] Unit tests for CRUD layer
 
 **Sprint 2: Data Entry (Week 2)**
 - [ ] Streamlit app structure
@@ -548,6 +557,6 @@ When helping with this project:
 
 ---
 
-**Document Version**: 1.3
-**Last Updated**: 2026-01-08
-**Status**: Phase 1, Sprint 1 - In Progress (Project Setup & Tooling Complete, Database Implementation Next)
+**Document Version**: 1.4
+**Last Updated**: 2026-01-10
+**Status**: Phase 1, Sprint 1 - In Progress (Database Connection Complete, Models Next)
