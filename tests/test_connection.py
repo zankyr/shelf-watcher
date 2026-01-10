@@ -8,6 +8,7 @@ from src.database.connection import (
     DATABASE_URL,
     PROJECT_ROOT,
     Base,
+    SessionLocal,
     engine,
     get_db,
 )
@@ -69,27 +70,28 @@ class TestEngine:
 class TestSessionLocal:
     """Tests for session factory."""
 
-    def test_session_local_creates_session(self) -> None:
-        """Verify SessionLocal creates a valid session."""
-        # Create isolated test session factory
+    def test_exported_session_local_creates_session(self) -> None:
+        """Verify the exported SessionLocal creates a valid session."""
+        session = SessionLocal()
+        assert isinstance(session, Session)
+        session.close()
+
+    def test_exported_session_local_can_execute_query(self) -> None:
+        """Verify sessions from exported SessionLocal can execute queries."""
+        session = SessionLocal()
+        result = session.execute(text("SELECT 42 as answer"))
+        row = result.fetchone()
+        assert row is not None
+        assert row[0] == 42
+        session.close()
+
+    def test_sessionmaker_pattern(self) -> None:
+        """Verify sessionmaker pattern works correctly in isolation."""
         test_engine = create_engine("sqlite:///:memory:")
         test_session_factory = sessionmaker(bind=test_engine)
 
         session = test_session_factory()
         assert isinstance(session, Session)
-        session.close()
-        test_engine.dispose()
-
-    def test_session_can_execute_query(self) -> None:
-        """Verify session can execute queries."""
-        test_engine = create_engine("sqlite:///:memory:")
-        test_session_factory = sessionmaker(bind=test_engine)
-
-        session = test_session_factory()
-        result = session.execute(text("SELECT 42 as answer"))
-        row = result.fetchone()
-        assert row is not None
-        assert row[0] == 42
         session.close()
         test_engine.dispose()
 
