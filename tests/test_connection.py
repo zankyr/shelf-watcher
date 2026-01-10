@@ -1,5 +1,7 @@
 """Unit tests for database connection module."""
 
+from unittest.mock import patch
+
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -129,20 +131,24 @@ class TestGetDb:
             pass
 
     def test_get_db_closes_session_after_use(self) -> None:
-        """Verify get_db closes session when generator exits."""
-        db_gen = get_db()
-        session = next(db_gen)
+        """Verify get_db calls close() on session when generator exits."""
+        with patch("src.database.connection.SessionLocal") as mock_session_local:
+            mock_session = mock_session_local.return_value
 
-        # Simulate end of use
-        try:
+            db_gen = get_db()
             next(db_gen)
-        except StopIteration:
-            pass
 
-        # Session should be closed (can't execute queries)
-        # Note: SQLAlchemy sessions can still be used after close()
-        # but this tests the generator cleanup pattern works
-        assert session is not None
+            # close() should not be called yet
+            mock_session.close.assert_not_called()
+
+            # Exhaust the generator
+            try:
+                next(db_gen)
+            except StopIteration:
+                pass
+
+            # Verify close() was called
+            mock_session.close.assert_called_once()
 
 
 class TestInitDb:
