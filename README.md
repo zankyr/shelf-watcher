@@ -5,26 +5,37 @@ Track grocery receipt history, analyze price trends over time, and visualize spe
 ## Setup
 
 ```bash
-# Install dependencies
-uv sync --all-extras
+# Install all dependencies (including dev tools)
+make dev
+
+# Install pre-commit hooks (automatically run linters before commits)
+uv run pre-commit install
 
 # Run the app
-uv run streamlit run src/app.py
+make run
 ```
 
 ## Development
 
+Quick commands using Makefile:
+
 ```bash
-# Run tests
+make test         # Run tests
+make coverage     # Run tests with HTML coverage report
+make format       # Format code with black and ruff
+make lint         # Lint code with ruff
+make type-check   # Type check with mypy
+make pre-commit   # Run all pre-commit hooks manually
+make clean        # Remove cache files
+make help         # Show all available commands
+```
+
+Or use uv commands directly:
+
+```bash
 uv run pytest
-
-# Format code
-uv run black src/
-
-# Lint code
-uv run ruff check src/
-
-# Type check
+uv run black src/ tests/
+uv run ruff check src/ tests/
 uv run mypy src/
 ```
 

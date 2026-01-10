@@ -2,8 +2,8 @@
 
 ## Project Overview
 
-**Project Name:** Grocery Receipt Tracker  
-**Developer:** Riccardo (10+ years experience, Python/Java expert)  
+**Project Name:** Grocery Receipt Tracker
+**Developer:** Riccardo (10+ years experience, Python/Java expert)
 **Goal:** Desktop/web application to track grocery receipt history, analyze price trends over time, and visualize spending patterns.
 
 ### Core Problem
@@ -189,6 +189,8 @@ CREATE INDEX idx_receipts_store ON receipts(store);
   - [x] Tool configurations in pyproject.toml (black, ruff, mypy, pytest)
   - [x] Directory structure created (src/, tests/, data/, docs/ with __init__.py files)
   - [x] Updated .gitignore for project-specific files
+  - [x] Pre-commit hooks configured and installed
+  - [x] Makefile created with common development commands
 - [ ] Database schema implementation
 - [ ] Basic CRUD operations
 - [ ] Unit tests for database layer
@@ -546,6 +548,6 @@ When helping with this project:
 
 ---
 
-**Document Version**: 1.1
-**Last Updated**: 2026-01-07
-**Status**: Phase 1, Sprint 1 - In Progress (Dependencies Installed, Configs Pending)
+**Document Version**: 1.3
+**Last Updated**: 2026-01-08
+**Status**: Phase 1, Sprint 1 - In Progress (Project Setup & Tooling Complete, Database Implementation Next)
