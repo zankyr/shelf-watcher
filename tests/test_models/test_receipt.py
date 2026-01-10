@@ -3,24 +3,9 @@
 import datetime as dt
 from decimal import Decimal
 
-import pytest
-from sqlalchemy import create_engine, inspect
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import inspect
 
-from src.database.connection import Base
 from src.database.models import Receipt
-
-
-@pytest.fixture
-def db_session():
-    """Create a fresh in-memory database for each test."""
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-    session_factory = sessionmaker(bind=engine)
-    session = session_factory()
-    yield session
-    session.close()
-    engine.dispose()
 
 
 class TestReceiptCreation:
