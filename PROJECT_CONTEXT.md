@@ -356,6 +356,10 @@ def normalize_price(quantity: float, unit: str, total_price: float) -> tuple[flo
 - **Environment config**: Make debug settings (like `echo`) configurable via environment variables
 - **Timestamp defaults**: Use `default=lambda: dt.datetime.now()`, not `default=dt.datetime.now`
 - **Shared fixtures**: Put common test fixtures (like `db_session`) in `tests/conftest.py`
+- **Model validation**: Use `@validates` decorator for field validation (e.g., trimming whitespace, rejecting empty values)
+- **Database constraints**: Use `CheckConstraint` for enforcing data rules at DB level (e.g., non-negative amounts)
+- **CRUD error handling**: Wrap database operations in try-except with `db.rollback()` on failure, re-raise exception
+- **Pagination**: Add `limit`, `offset`, and ordering parameters to list queries for scalability
 
 ### Testing
 - Test file names: `test_*.py`
@@ -571,6 +575,6 @@ When helping with this project:
 
 ---
 
-**Document Version**: 1.5
-**Last Updated**: 2026-01-10
+**Document Version**: 1.6
+**Last Updated**: 2026-01-18
 **Status**: Phase 1, Sprint 1 - In Progress (Receipt Model + CRUD Complete)
