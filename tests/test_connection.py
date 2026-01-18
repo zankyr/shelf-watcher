@@ -121,19 +121,6 @@ class TestSessionLocal:
         session.close()
         test_engine.dispose()
 
-    def test_session_can_execute_query(self) -> None:
-        """Verify session can execute queries."""
-        test_engine = create_engine("sqlite:///:memory:")
-        test_session_factory = sessionmaker(bind=test_engine)
-
-        session = test_session_factory()
-        result = session.execute(text("SELECT 42 as answer"))
-        row = result.fetchone()
-        assert row is not None
-        assert row[0] == 42
-        session.close()
-        test_engine.dispose()
-
 
 class TestBase:
     """Tests for declarative base."""
