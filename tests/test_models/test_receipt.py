@@ -4,6 +4,7 @@ import datetime as dt
 import time
 from decimal import Decimal
 
+import pytest
 from sqlalchemy import inspect
 
 from src.database.models import Receipt
@@ -150,3 +151,52 @@ class TestReceiptRepr:
         assert str(receipt.id) in repr_str
         assert "2024-01-15" in repr_str
         assert "Jumbo" in repr_str
+
+
+class TestStoreValidation:
+    """Tests for store field validation."""
+
+    def test_store_rejects_empty_string(self) -> None:
+        """Test that empty string is rejected for store name."""
+        with pytest.raises(ValueError, match="cannot be empty"):
+            Receipt(
+                date=dt.date(2024, 1, 15),
+                store="",
+                total_amount=Decimal("10.00"),
+            )
+
+    def test_store_rejects_whitespace_only(self) -> None:
+        """Test that whitespace-only string is rejected for store name."""
+        with pytest.raises(ValueError, match="cannot be empty"):
+            Receipt(
+                date=dt.date(2024, 1, 15),
+                store="   ",
+                total_amount=Decimal("10.00"),
+            )
+
+    def test_store_rejects_none(self) -> None:
+        """Test that None is rejected for store name."""
+        with pytest.raises(ValueError, match="cannot be None"):
+            Receipt(
+                date=dt.date(2024, 1, 15),
+                store=None,
+                total_amount=Decimal("10.00"),
+            )
+
+    def test_store_trims_whitespace(self) -> None:
+        """Test that leading and trailing whitespace is trimmed."""
+        receipt = Receipt(
+            date=dt.date(2024, 1, 15),
+            store="  Lidl  ",
+            total_amount=Decimal("10.00"),
+        )
+        assert receipt.store == "Lidl"
+
+    def test_store_accepts_valid_name(self) -> None:
+        """Test that valid store names are accepted."""
+        receipt = Receipt(
+            date=dt.date(2024, 1, 15),
+            store="Albert Heijn",
+            total_amount=Decimal("10.00"),
+        )
+        assert receipt.store == "Albert Heijn"

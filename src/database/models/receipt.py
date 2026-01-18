@@ -3,8 +3,8 @@
 import datetime as dt
 from decimal import Decimal
 
-from sqlalchemy import Index, Numeric, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import CheckConstraint, Index, Numeric, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from src.database.connection import Base
 
@@ -27,7 +27,18 @@ class Receipt(Base):
     __table_args__ = (
         Index("idx_receipts_date", "date"),
         Index("idx_receipts_store", "store"),
+        CheckConstraint("total_amount >= 0", name="ck_receipts_total_amount_non_negative"),
     )
 
     def __repr__(self) -> str:
         return f"<Receipt(id={self.id}, date={self.date}, store='{self.store}')>"
+
+    @validates("store")
+    def validate_store(self, key: str, value: str) -> str:
+        """Validate and normalize the store name."""
+        if value is None:
+            raise ValueError("Store name cannot be None")
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("Store name cannot be empty or whitespace-only")
+        return stripped
