@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 from sqlalchemy import inspect
+from sqlalchemy.exc import IntegrityError
 
 from src.database.models import Receipt
 
@@ -200,3 +201,44 @@ class TestStoreValidation:
             total_amount=Decimal("10.00"),
         )
         assert receipt.store == "Albert Heijn"
+
+
+class TestTotalAmountConstraint:
+    """Tests for total_amount check constraint."""
+
+    def test_rejects_negative_amount(self, db_session) -> None:
+        """Test that negative total_amount is rejected by the database."""
+        receipt = Receipt(
+            date=dt.date(2024, 1, 15),
+            store="Lidl",
+            total_amount=Decimal("-10.00"),
+        )
+        db_session.add(receipt)
+        with pytest.raises(IntegrityError):
+            db_session.commit()
+
+    def test_accepts_zero_amount(self, db_session) -> None:
+        """Test that zero total_amount is accepted."""
+        receipt = Receipt(
+            date=dt.date(2024, 1, 15),
+            store="Lidl",
+            total_amount=Decimal("0.00"),
+        )
+        db_session.add(receipt)
+        db_session.commit()
+
+        assert receipt.id is not None
+        assert receipt.total_amount == Decimal("0.00")
+
+    def test_accepts_positive_amount(self, db_session) -> None:
+        """Test that positive total_amount is accepted."""
+        receipt = Receipt(
+            date=dt.date(2024, 1, 15),
+            store="Lidl",
+            total_amount=Decimal("99.99"),
+        )
+        db_session.add(receipt)
+        db_session.commit()
+
+        assert receipt.id is not None
+        assert receipt.total_amount == Decimal("99.99")
