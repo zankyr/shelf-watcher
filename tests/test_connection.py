@@ -89,15 +89,6 @@ class TestEngine:
             assert result.scalar() == 1
         test_engine.dispose()
 
-    def test_engine_can_execute_query(self) -> None:
-        """Verify engine can execute a simple query."""
-        # Use in-memory database for test isolation
-        test_engine = create_engine("sqlite:///:memory:")
-        with test_engine.connect() as conn:
-            result = conn.execute(text("SELECT 1"))
-            assert result.scalar() == 1
-        test_engine.dispose()
-
 
 class TestSessionLocal:
     """Tests for session factory."""
@@ -127,17 +118,6 @@ class TestSessionLocal:
         row = result.fetchone()
         assert row is not None
         assert row[0] == 42
-        session.close()
-        test_engine.dispose()
-
-    def test_session_local_creates_session(self) -> None:
-        """Verify SessionLocal creates a valid session."""
-        # Create isolated test session factory
-        test_engine = create_engine("sqlite:///:memory:")
-        test_session_factory = sessionmaker(bind=test_engine)
-
-        session = test_session_factory()
-        assert isinstance(session, Session)
         session.close()
         test_engine.dispose()
 
