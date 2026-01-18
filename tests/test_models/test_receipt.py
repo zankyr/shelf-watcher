@@ -1,6 +1,7 @@
 """Unit tests for Receipt model."""
 
 import datetime as dt
+import time
 from decimal import Decimal
 
 from sqlalchemy import inspect
@@ -93,8 +94,6 @@ class TestReceiptTimestamps:
 
     def test_updated_at_changes_on_modification(self, db_session) -> None:
         """Test that updated_at is updated when modifying a receipt."""
-        import time
-
         receipt = Receipt(
             date=dt.date(2024, 1, 15),
             store="Lidl",
@@ -104,8 +103,8 @@ class TestReceiptTimestamps:
         db_session.commit()
         original_updated_at = receipt.updated_at
 
-        # Small delay to ensure timestamp difference
-        time.sleep(0.01)
+        # Delay to ensure timestamp difference (100ms for reliability across systems)
+        time.sleep(0.1)
 
         # Modify the receipt
         receipt.total_amount = Decimal("15.00")
