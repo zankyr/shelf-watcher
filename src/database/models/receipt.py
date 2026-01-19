@@ -34,7 +34,7 @@ class Receipt(Base):
         return f"<Receipt(id={self.id}, date={self.date}, store='{self.store}')>"
 
     @validates("store")
-    def validate_store(self, key: str, value: str) -> str:
+    def validate_store(self, key: str, value: str | None) -> str:
         """Validate and normalize the store name."""
         if value is None:
             raise ValueError("Store name cannot be None")

@@ -3,7 +3,11 @@
 import datetime as dt
 from decimal import Decimal
 
+import pytest
+from sqlalchemy.exc import SQLAlchemyError
+
 from src.database.crud import create_receipt, get_receipt, get_receipts
+from src.database.models import Receipt
 
 
 class TestCreateReceipt:
@@ -50,6 +54,21 @@ class TestCreateReceipt:
         assert fetched is not None
         assert fetched.id == receipt.id
         assert fetched.store == "Jumbo"
+
+    def test_create_receipt_rolls_back_on_error(self, db_session) -> None:
+        """Test that create_receipt rolls back and re-raises on database error."""
+        # Trigger constraint violation with negative amount
+        with pytest.raises(SQLAlchemyError):
+            create_receipt(
+                db=db_session,
+                date=dt.date(2024, 1, 15),
+                store="Lidl",
+                total_amount=Decimal("-10.00"),
+            )
+
+        # Verify rollback occurred - session should be usable and no receipt persisted
+        count = db_session.query(Receipt).count()
+        assert count == 0
 
 
 class TestGetReceipt:
