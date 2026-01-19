@@ -135,6 +135,13 @@ class TestBase:
         # tables should be dict-like (works whether empty or with models)
         assert hasattr(Base.metadata.tables, "keys")
 
+    def test_base_metadata_has_receipts_table(self) -> None:
+        """Verify Base metadata includes the receipts table."""
+        # Import models to ensure they're registered with Base
+        from src.database.models import Receipt  # noqa: F401
+
+        assert "receipts" in Base.metadata.tables
+
 
 class TestGetDb:
     """Tests for get_db dependency."""
