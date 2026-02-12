@@ -196,16 +196,16 @@ CREATE INDEX idx_receipts_store ON receipts(store);
   - [x] get_db() dependency for session management
   - [x] init_db() for table creation
   - [x] Unit tests with 100% coverage
-- [ ] Database models (incremental, one per branch)
-  - [ ] Store model
-  - [ ] Category model
-  - [x] Receipt model (basic, no relationships yet)
-  - [ ] Item model
-- [ ] CRUD operations
+- [x] Database models (incremental)
+  - [x] Store model
+  - [x] Category model
+  - [x] Receipt model
+  - [x] Item model
+- [x] CRUD operations
   - [x] Receipt CRUD (create_receipt, get_receipt, get_receipts)
-  - [ ] Store CRUD
-  - [ ] Category CRUD
-  - [ ] Item CRUD
+  - [x] Store CRUD (create_store, get_store, get_stores)
+  - [x] Category CRUD (create_category, get_category, get_categories)
+  - [x] Item CRUD (create_item, get_item, get_items)
 
 **Sprint 2: Data Entry (Week 2)**
 - [ ] Streamlit app structure
@@ -367,14 +367,12 @@ def normalize_price(quantity: float, unit: str, total_price: float) -> tuple[flo
 - **Verify behavior, not just existence**: Tests should assert actual behavior (e.g., mock to verify `close()` was called)
 
 ### Git Workflow
-- **Feature branches**: Develop all features in dedicated branches off `main`
-- **Pull requests**: Always use pull requests to merge code into `main` (never push directly)
-- **Branch naming**: `feat/description`, `fix/issue-description`
+- **Direct to main**: Commit directly to `main` for solo development velocity
 - **Commit messages**: Conventional Commits format
     - `feat: add price normalization`
     - `fix: correct date validation`
     - `docs: update schema documentation`
-- **PR workflow**: Create branch → commit changes → push → open PR via `gh pr create`
+- **Atomic commits**: Each commit should be a logical, self-contained change with passing tests
 
 ---
 
@@ -576,4 +574,4 @@ When helping with this project:
 
 **Document Version**: 1.5
 **Last Updated**: 2026-01-10
-**Status**: Phase 1, Sprint 1 - In Progress (Receipt Model + CRUD Complete)
+**Status**: Phase 1, Sprint 1 - Complete (All Models + CRUDs Done)
