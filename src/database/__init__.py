@@ -13,6 +13,8 @@ from src.database.connection import (
     get_db,
     init_db,
 )
+from src.database.crud import create_receipt, get_receipt, get_receipts
+from src.database.models import Receipt
 
 __all__ = [
     "DATABASE_PATH",
@@ -23,4 +25,8 @@ __all__ = [
     "engine",
     "get_db",
     "init_db",
+    "Receipt",
+    "create_receipt",
+    "get_receipt",
+    "get_receipts",
 ]
