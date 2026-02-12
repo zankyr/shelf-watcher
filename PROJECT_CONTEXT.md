@@ -367,11 +367,14 @@ def normalize_price(quantity: float, unit: str, total_price: float) -> tuple[flo
 - **Verify behavior, not just existence**: Tests should assert actual behavior (e.g., mock to verify `close()` was called)
 
 ### Git Workflow
-- Commit messages: Conventional Commits format
+- **Feature branches**: Develop all features in dedicated branches off `main`
+- **Pull requests**: Always use pull requests to merge code into `main` (never push directly)
+- **Branch naming**: `feat/description`, `fix/issue-description`
+- **Commit messages**: Conventional Commits format
     - `feat: add price normalization`
     - `fix: correct date validation`
     - `docs: update schema documentation`
-- Branch naming: `feature/description`, `fix/issue-description`
+- **PR workflow**: Create branch → commit changes → push → open PR via `gh pr create`
 
 ---
 
