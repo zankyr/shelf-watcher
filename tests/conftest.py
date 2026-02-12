@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.database.connection import Base
+from src.database.models import Category  # noqa: F401 - Ensure model is registered with Base
 from src.database.models import Receipt  # noqa: F401 - Ensure model is registered with Base
 from src.database.models import Store  # noqa: F401 - Ensure model is registered with Base
 
