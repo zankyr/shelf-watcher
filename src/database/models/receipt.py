@@ -1,12 +1,18 @@
 """Receipt model for storing high-level receipt information."""
 
+from __future__ import annotations
+
 import datetime as dt
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, Index, Numeric, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, validates
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from src.database.connection import Base
+
+if TYPE_CHECKING:
+    from src.database.models.item import Item
 
 
 class Receipt(Base):
@@ -22,6 +28,10 @@ class Receipt(Base):
     created_at: Mapped[dt.datetime] = mapped_column(default=lambda: dt.datetime.now())
     updated_at: Mapped[dt.datetime] = mapped_column(
         default=lambda: dt.datetime.now(), onupdate=lambda: dt.datetime.now()
+    )
+
+    items: Mapped[list[Item]] = relationship(
+        "Item", back_populates="receipt", cascade="all, delete-orphan"
     )
 
     __table_args__ = (

@@ -1,11 +1,17 @@
 """Category model for the Grocery Receipt Tracker."""
 
+from __future__ import annotations
+
 import datetime as dt
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from src.database.connection import Base
+
+if TYPE_CHECKING:
+    from src.database.models.item import Item
 
 
 class Category(Base):
@@ -18,19 +24,16 @@ class Category(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
-    parent_id: Mapped[int | None] = mapped_column(
-        ForeignKey("categories.id"), nullable=True
-    )
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id"), nullable=True)
     icon: Mapped[str | None] = mapped_column(String(50), nullable=True)
     color: Mapped[str | None] = mapped_column(String(7), nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(default=lambda: dt.datetime.now())
 
-    parent: Mapped["Category | None"] = relationship(
+    parent: Mapped[Category | None] = relationship(
         "Category", remote_side=[id], back_populates="children"
     )
-    children: Mapped[list["Category"]] = relationship(
-        "Category", back_populates="parent"
-    )
+    children: Mapped[list[Category]] = relationship("Category", back_populates="parent")
+    items: Mapped[list[Item]] = relationship("Item", back_populates="category")
 
     def __repr__(self) -> str:
         return f"<Category(id={self.id}, name='{self.name}')>"
