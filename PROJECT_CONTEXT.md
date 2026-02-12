@@ -208,10 +208,10 @@ CREATE INDEX idx_receipts_store ON receipts(store);
   - [x] Item CRUD (create_item, get_item, get_items)
 
 **Sprint 2: Data Entry (Week 2)**
-- [ ] Streamlit app structure
-- [ ] Receipt entry form with dynamic item rows
-- [ ] Category management
-- [ ] Data validation
+- [x] Streamlit app structure
+- [x] Receipt entry form with dynamic item rows
+- [x] Category management (inline creation in receipt form)
+- [x] Data validation (Pydantic models + price normalization utilities)
 
 **Sprint 3: Visualization (Week 3)**
 - [ ] Receipt history browser with filters
@@ -572,6 +572,6 @@ When helping with this project:
 
 ---
 
-**Document Version**: 1.5
-**Last Updated**: 2026-01-10
-**Status**: Phase 1, Sprint 1 - Complete (All Models + CRUDs Done)
+**Document Version**: 1.6
+**Last Updated**: 2026-02-12
+**Status**: Phase 1, Sprint 2 - Complete (Streamlit UI + Receipt Entry Form)
