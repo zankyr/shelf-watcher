@@ -15,19 +15,19 @@ repos:
 
       - id: black
         name: black
-        entry: uv run black
+        entry: uv run --frozen --quiet black
         language: system
         types: [python]
 
       - id: ruff
         name: ruff
-        entry: uv run ruff check --fix
+        entry: uv run --frozen --quiet ruff check --fix
         language: system
         types: [python]
 
       - id: mypy
         name: mypy
-        entry: uv run mypy --ignore-missing-imports
+        entry: uv run --frozen --quiet mypy --ignore-missing-imports
         language: system
         types: [python]
         pass_filenames: false
