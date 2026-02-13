@@ -13,4 +13,7 @@ init_db()
 
 st.title("\U0001f6d2 Shelf Watcher")
 st.markdown("Track your grocery receipts and analyze price trends.")
-st.markdown("Use the **sidebar** to navigate to the receipt entry form.")
+st.markdown(
+    "Use the **sidebar** to navigate between pages: "
+    "**Receipt Entry**, **Receipt History**, and **Analytics**."
+)

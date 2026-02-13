@@ -214,11 +214,11 @@ CREATE INDEX idx_receipts_store ON receipts(store);
 - [x] Data validation (Pydantic models + price normalization utilities)
 
 **Sprint 3: Visualization (Week 3)**
-- [ ] Receipt history browser with filters
-- [ ] Price trend charts (line charts over time)
-- [ ] Store comparison charts
-- [ ] Category spending breakdown (pie/bar charts)
-- [ ] Export functionality
+- [x] Receipt history browser with filters
+- [x] Price trend charts (line charts over time)
+- [x] Store comparison charts
+- [x] Category spending breakdown (pie/bar charts)
+- [x] Export functionality
 
 ### Phase 2: OCR Integration (Future)
 - Receipt photo upload
@@ -574,4 +574,4 @@ When helping with this project:
 
 **Document Version**: 1.6
 **Last Updated**: 2026-02-12
-**Status**: Phase 1, Sprint 2 - Complete (Streamlit UI + Receipt Entry Form)
+**Status**: Phase 1, Sprint 3 - Complete (Receipt History + Analytics)
