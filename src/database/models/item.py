@@ -43,6 +43,7 @@ class Item(Base):
     total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     normalized_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     normalized_unit: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    original_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(default=lambda: dt.datetime.now())
 
@@ -52,6 +53,10 @@ class Item(Base):
     __table_args__ = (
         CheckConstraint("quantity > 0", name="ck_items_quantity_positive"),
         CheckConstraint("total_price >= 0", name="ck_items_total_price_non_negative"),
+        CheckConstraint(
+            "original_price IS NULL OR original_price >= 0",
+            name="ck_items_original_price_non_negative",
+        ),
         Index("idx_items_receipt_id", "receipt_id"),
         Index("idx_items_category_id", "category_id"),
         Index("idx_items_name", "name"),

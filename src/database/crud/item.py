@@ -20,6 +20,7 @@ def create_item(
     price_per_unit: Decimal | None = None,
     normalized_price: Decimal | None = None,
     normalized_unit: str | None = None,
+    original_price: Decimal | None = None,
     notes: str | None = None,
 ) -> Item:
     """Create a new item on a receipt.
@@ -55,6 +56,7 @@ def create_item(
         price_per_unit=price_per_unit,
         normalized_price=normalized_price,
         normalized_unit=normalized_unit,
+        original_price=original_price,
         notes=notes,
     )
     try:

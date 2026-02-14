@@ -93,6 +93,24 @@ class TestItemFormData:
         item = ItemFormData(**_valid_item(new_category_name="  Dairy  "))
         assert item.new_category_name == "Dairy"
 
+    def test_original_price_none_default(self) -> None:
+        item = ItemFormData(**_valid_item())
+        assert item.original_price is None
+
+    def test_original_price_valid(self) -> None:
+        item = ItemFormData(
+            **_valid_item(total_price=Decimal("2.50"), original_price=Decimal("3.50"))
+        )
+        assert item.original_price == Decimal("3.50")
+
+    def test_original_price_negative_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="Original price"):
+            ItemFormData(**_valid_item(original_price=Decimal("-1.00")))
+
+    def test_original_price_less_than_total_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="Original price"):
+            ItemFormData(**_valid_item(total_price=Decimal("5.00"), original_price=Decimal("3.00")))
+
 
 class TestReceiptFormData:
     """Tests for ReceiptFormData validation."""

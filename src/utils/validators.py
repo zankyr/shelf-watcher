@@ -23,6 +23,7 @@ class ItemFormData(BaseModel):
     quantity: Annotated[Decimal, Field(gt=0)]
     unit: str
     total_price: Annotated[Decimal, Field(ge=0)]
+    original_price: Decimal | None = None
 
     @field_validator("name", "brand", "new_category_name", mode="before")
     @classmethod
@@ -39,6 +40,21 @@ class ItemFormData(BaseModel):
         if v not in VALID_UNITS:
             raise ValueError(f"Unit must be one of {VALID_UNITS}, got '{v}'")
         return v
+
+    @field_validator("original_price")
+    @classmethod
+    def validate_original_price(cls, v: Decimal | None) -> Decimal | None:
+        """Ensure original_price is non-negative when set."""
+        if v is not None and v < 0:
+            raise ValueError("Original price cannot be negative")
+        return v
+
+    @model_validator(mode="after")
+    def validate_original_ge_total(self) -> ItemFormData:
+        """Ensure original_price >= total_price when set."""
+        if self.original_price is not None and self.original_price < self.total_price:
+            raise ValueError("Original price cannot be less than total price")
+        return self
 
 
 class ReceiptFormData(BaseModel):
