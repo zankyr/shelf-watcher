@@ -478,12 +478,12 @@ class Category:
 
 ## Questions to Resolve
 
-### During Development
-- [ ] Should we support multiple currencies?
-- [ ] Should we track item-level discounts separately?
-- [ ] Do we need receipt photos storage (even without OCR)?
-- [ ] Should we support tags in addition to categories?
-- [ ] What about tax/VAT tracking?
+### During Development (Resolved)
+- [x] **Multiple currencies?** → Yes, EUR and CHF only. Add currency field to receipts.
+- [x] **Item-level discounts?** → Yes. Add original_price + discount fields to items.
+- [x] **Receipt photo storage?** → No, skip until OCR phase.
+- [x] **Tags in addition to categories?** → No, categories are sufficient.
+- [x] **Tax/VAT tracking?** → No, prices are stored as-paid (tax included).
 
 ### For Phase 2 (OCR)
 - [ ] Which OCR library performs best on grocery receipts?
