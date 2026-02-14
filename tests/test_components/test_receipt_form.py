@@ -266,3 +266,19 @@ class TestUpdateReceipt:
         updated = update_receipt(receipt.id, _receipt(items=items), db=db_session)
 
         assert updated.total_amount == Decimal("10.00")
+
+    def test_save_with_currency(self, db_session: object) -> None:
+        """Save a CHF receipt and verify currency is stored."""
+        receipt = save_receipt(_receipt(currency="CHF"), db=db_session)
+        assert receipt.currency == "CHF"
+
+    def test_save_default_currency(self, db_session: object) -> None:
+        """Verify EUR is the default currency."""
+        receipt = save_receipt(_receipt(), db=db_session)
+        assert receipt.currency == "EUR"
+
+    def test_update_currency(self, db_session: object) -> None:
+        """Changing currency on update should persist."""
+        receipt = save_receipt(_receipt(currency="EUR"), db=db_session)
+        updated = update_receipt(receipt.id, _receipt(currency="CHF"), db=db_session)
+        assert updated.currency == "CHF"

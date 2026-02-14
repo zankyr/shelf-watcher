@@ -15,7 +15,7 @@ from src.database.models.item import Item
 from src.database.models.receipt import Receipt
 from src.database.models.store import Store
 from src.utils.calculations import calculate_price_per_unit, normalize_price
-from src.utils.validators import ItemFormData, ReceiptFormData
+from src.utils.validators import CURRENCY_SYMBOLS, VALID_CURRENCIES, ItemFormData, ReceiptFormData
 
 _NEW_STORE_SENTINEL = "-- Enter new store --"
 _NO_CATEGORY = "(none)"
@@ -134,6 +134,7 @@ def save_receipt(receipt_data: ReceiptFormData, db: Session | None = None) -> Re
             date=receipt_data.date,
             store=receipt_data.store,
             total_amount=receipt_data.total_amount,
+            currency=receipt_data.currency,
             notes=receipt_data.notes or None,
         )
         db.add(receipt)
@@ -186,6 +187,7 @@ def update_receipt(
         receipt.date = receipt_data.date
         receipt.store = receipt_data.store
         receipt.total_amount = receipt_data.total_amount
+        receipt.currency = receipt_data.currency
         receipt.notes = receipt_data.notes or None
 
         # Delete all old items, then recreate
@@ -211,6 +213,7 @@ _EDIT_STATE_KEYS = (
     "_edit_loaded",
     "edit_receipt_date",
     "edit_receipt_store",
+    "edit_receipt_currency",
     "edit_receipt_notes",
 )
 
@@ -233,6 +236,7 @@ def _load_receipt_into_session_state(receipt_id: int) -> None:
 
         st.session_state["edit_receipt_date"] = receipt.date
         st.session_state["edit_receipt_store"] = receipt.store
+        st.session_state["edit_receipt_currency"] = receipt.currency
         st.session_state["edit_receipt_notes"] = receipt.notes or ""
 
         item_dicts: list[dict[str, Any]] = []
@@ -306,11 +310,18 @@ def render_receipt_form() -> None:
     # Pre-fill defaults for edit mode
     default_date = st.session_state.get("edit_receipt_date", "today") if is_edit else "today"
     edit_store = st.session_state.get("edit_receipt_store", "") if is_edit else ""
+    edit_currency = st.session_state.get("edit_receipt_currency", "EUR") if is_edit else "EUR"
     default_notes = st.session_state.get("edit_receipt_notes", "") if is_edit else ""
 
-    col_date, col_store = st.columns(2)
+    col_date, col_currency, col_store = st.columns([2, 1, 3])
     with col_date:
         receipt_date = st.date_input("Date", value=default_date)
+    with col_currency:
+        currency_options = list(VALID_CURRENCIES)
+        currency_idx = (
+            currency_options.index(edit_currency) if edit_currency in currency_options else 0
+        )
+        receipt_currency = st.selectbox("Currency", options=currency_options, index=currency_idx)
     with col_store:
         store_options = store_names + [_NEW_STORE_SENTINEL]
         # In edit mode, pre-select the store if it exists in the list
@@ -395,10 +406,11 @@ def render_receipt_form() -> None:
         st.rerun()
 
     # --- Total and notes ---
+    symbol = CURRENCY_SYMBOLS[receipt_currency]
     col_total, col_notes = st.columns(2)
     with col_total:
         total = sum(item["total_price"] for item in st.session_state["items"])
-        st.metric("Total", f"\u20ac{total:.2f}")
+        st.metric("Total", f"{symbol}{total:.2f}")
     with col_notes:
         receipt_notes = st.text_area("Notes", value=default_notes, height=80)
 
@@ -439,6 +451,7 @@ def render_receipt_form() -> None:
             receipt_form = ReceiptFormData(
                 date=receipt_date,
                 store=store,
+                currency=receipt_currency,
                 notes=receipt_notes,
                 items=item_form_data,
             )
@@ -455,14 +468,14 @@ def render_receipt_form() -> None:
                 st.session_state["items"] = [_new_item_dict()]
                 st.session_state["success_message"] = (
                     f"Receipt updated! (ID: {receipt.id}, "
-                    f"Total: \u20ac{receipt.total_amount:.2f})"
+                    f"Total: {symbol}{receipt.total_amount:.2f})"
                 )
             else:
                 receipt = save_receipt(receipt_form)
                 st.session_state["items"] = [_new_item_dict()]
                 st.session_state["success_message"] = (
                     f"Receipt saved! (ID: {receipt.id}, "
-                    f"Total: \u20ac{receipt.total_amount:.2f})"
+                    f"Total: {symbol}{receipt.total_amount:.2f})"
                 )
             st.rerun()
         except Exception as e:
