@@ -282,3 +282,21 @@ class TestUpdateReceipt:
         receipt = save_receipt(_receipt(currency="EUR"), db=db_session)
         updated = update_receipt(receipt.id, _receipt(currency="CHF"), db=db_session)
         assert updated.currency == "CHF"
+
+    def test_save_with_original_price(self, db_session: object) -> None:
+        """Save an item with original_price and verify it persists."""
+        item = _item(total_price=Decimal("2.50"), original_price=Decimal("3.50"))
+        receipt = save_receipt(_receipt(items=[item]), db=db_session)
+
+        db_item = db_session.query(Item).filter(Item.receipt_id == receipt.id).first()
+        assert db_item.original_price == Decimal("3.50")
+
+    def test_update_with_original_price(self, db_session: object) -> None:
+        """Update a receipt and verify original_price on new items."""
+        receipt = save_receipt(_receipt(), db=db_session)
+
+        item = _item(total_price=Decimal("2.50"), original_price=Decimal("4.00"))
+        update_receipt(receipt.id, _receipt(items=[item]), db=db_session)
+
+        db_item = db_session.query(Item).filter(Item.receipt_id == receipt.id).first()
+        assert db_item.original_price == Decimal("4.00")

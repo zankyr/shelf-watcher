@@ -53,6 +53,7 @@ def _new_item_dict() -> dict[str, Any]:
         "quantity": 1.0,
         "unit": "units",
         "total_price": 0.0,
+        "original_price": 0.0,
     }
 
 
@@ -102,6 +103,7 @@ def _create_items_for_receipt(db: Session, receipt_id: int, items: list[ItemForm
             total_price=item_data.total_price,
             normalized_price=norm_price,
             normalized_unit=norm_unit,
+            original_price=item_data.original_price,
         )
         db.add(item)
 
@@ -254,6 +256,7 @@ def _load_receipt_into_session_state(receipt_id: int) -> None:
                     "quantity": float(item.quantity),
                     "unit": item.unit,
                     "total_price": float(item.total_price),
+                    "original_price": float(item.original_price) if item.original_price else 0.0,
                 }
             )
 
@@ -336,12 +339,13 @@ def render_receipt_form() -> None:
             new_store_name = st.text_input("New store name")
 
     # --- Items section ---
+    symbol = CURRENCY_SYMBOLS[receipt_currency]
     st.subheader("Items")
 
     items_to_remove: list[int] = []
     for idx, item_state in enumerate(st.session_state["items"]):
         item_id = item_state["id"]
-        cols = st.columns([3, 2, 2, 1.5, 1.5, 1.5, 0.5])
+        cols = st.columns([2.5, 1.5, 2, 1.2, 1.2, 1.2, 1.2, 0.5])
 
         with cols[0]:
             item_state["name"] = st.text_input(
@@ -391,6 +395,21 @@ def render_receipt_form() -> None:
                 key=f"price_{item_id}",
             )
         with cols[6]:
+            item_state["original_price"] = st.number_input(
+                "Orig.",
+                value=item_state.get("original_price", 0.0),
+                min_value=0.0,
+                step=0.01,
+                format="%.2f",
+                key=f"orig_{item_id}",
+            )
+            if (
+                item_state["original_price"] > 0
+                and item_state["original_price"] > item_state["total_price"]
+            ):
+                saved = item_state["original_price"] - item_state["total_price"]
+                st.caption(f"Saved {symbol}{saved:.2f}")
+        with cols[7]:
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("\U0001f5d1", key=f"del_{item_id}", help="Remove item"):
                 items_to_remove.append(idx)
@@ -406,7 +425,6 @@ def render_receipt_form() -> None:
         st.rerun()
 
     # --- Total and notes ---
-    symbol = CURRENCY_SYMBOLS[receipt_currency]
     col_total, col_notes = st.columns(2)
     with col_total:
         total = sum(item["total_price"] for item in st.session_state["items"])
@@ -436,6 +454,9 @@ def render_receipt_form() -> None:
                 elif cat_selection == _NEW_CATEGORY_SENTINEL:
                     new_cat_name = item_state.get("new_category_name", "")
 
+                orig = item_state.get("original_price", 0.0)
+                original_price = Decimal(str(orig)) if orig > 0 else None
+
                 item_form_data.append(
                     ItemFormData(
                         name=item_state["name"],
@@ -445,6 +466,7 @@ def render_receipt_form() -> None:
                         quantity=Decimal(str(item_state["quantity"])),
                         unit=item_state["unit"],
                         total_price=Decimal(str(item_state["total_price"])),
+                        original_price=original_price,
                     )
                 )
 
