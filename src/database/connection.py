@@ -8,7 +8,7 @@ import os
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import Engine, create_engine, inspect, text
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 
@@ -60,6 +60,27 @@ def get_db() -> Iterator[Session]:
         db.close()
 
 
+def _run_migrations(eng: Engine) -> None:
+    """Add columns that may be missing from older databases.
+
+    Idempotent — skips columns that already exist (e.g. on a fresh DB).
+    """
+    inspector = inspect(eng)
+
+    receipt_cols = {c["name"] for c in inspector.get_columns("receipts")}
+    if "currency" not in receipt_cols:
+        with eng.begin() as conn:
+            conn.execute(
+                text("ALTER TABLE receipts ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'EUR'")
+            )
+
+    item_cols = {c["name"] for c in inspector.get_columns("items")}
+    if "original_price" not in item_cols:
+        with eng.begin() as conn:
+            conn.execute(text("ALTER TABLE items ADD COLUMN original_price NUMERIC(10, 2)"))
+
+
 def init_db() -> None:
     """Create all tables in the database."""
     Base.metadata.create_all(bind=engine)
+    _run_migrations(engine)

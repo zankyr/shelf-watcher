@@ -15,6 +15,7 @@ def create_receipt(
     store: str,
     total_amount: Decimal,
     notes: str | None = None,
+    currency: str = "EUR",
 ) -> Receipt:
     """Create a new receipt.
 
@@ -24,6 +25,7 @@ def create_receipt(
         store: Store name
         total_amount: Total amount
         notes: Optional notes
+        currency: Currency code ("EUR" or "CHF")
 
     Returns:
         The created Receipt
@@ -36,6 +38,7 @@ def create_receipt(
         store=store,
         total_amount=total_amount,
         notes=notes,
+        currency=currency,
     )
     try:
         db.add(receipt)

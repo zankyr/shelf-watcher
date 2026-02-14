@@ -169,3 +169,15 @@ class TestReceiptFormData:
         items = [_valid_item(), _valid_item(name="")]
         with pytest.raises(ValidationError):
             ReceiptFormData(**_valid_receipt(items=items))
+
+    def test_currency_default_eur(self) -> None:
+        receipt = ReceiptFormData(**_valid_receipt())
+        assert receipt.currency == "EUR"
+
+    def test_currency_chf_accepted(self) -> None:
+        receipt = ReceiptFormData(**_valid_receipt(currency="CHF"))
+        assert receipt.currency == "CHF"
+
+    def test_invalid_currency_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="Currency"):
+            ReceiptFormData(**_valid_receipt(currency="USD"))

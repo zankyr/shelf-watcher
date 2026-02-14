@@ -9,6 +9,8 @@ from typing import Annotated
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
 VALID_UNITS = ("kg", "g", "L", "ml", "units")
+VALID_CURRENCIES = ("EUR", "CHF")
+CURRENCY_SYMBOLS: dict[str, str] = {"EUR": "\u20ac", "CHF": "CHF"}
 
 
 class ItemFormData(BaseModel):
@@ -44,8 +46,17 @@ class ReceiptFormData(BaseModel):
 
     date: dt.date
     store: Annotated[str, Field(min_length=1)]
+    currency: str = "EUR"
     notes: str = ""
     items: Annotated[list[ItemFormData], Field(min_length=1)]
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency(cls, v: str) -> str:
+        """Ensure currency is one of the allowed values."""
+        if v not in VALID_CURRENCIES:
+            raise ValueError(f"Currency must be one of {VALID_CURRENCIES}, got '{v}'")
+        return v
 
     @field_validator("store", "notes", mode="before")
     @classmethod

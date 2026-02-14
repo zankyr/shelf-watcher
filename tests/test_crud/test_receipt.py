@@ -55,6 +55,29 @@ class TestCreateReceipt:
         assert fetched.id == receipt.id
         assert fetched.store == "Jumbo"
 
+    def test_create_receipt_with_currency(self, db_session) -> None:
+        """Test creating a receipt with explicit CHF currency."""
+        receipt = create_receipt(
+            db=db_session,
+            date=dt.date(2024, 1, 15),
+            store="Migros",
+            total_amount=Decimal("45.99"),
+            currency="CHF",
+        )
+
+        assert receipt.currency == "CHF"
+
+    def test_create_receipt_default_currency(self, db_session) -> None:
+        """Test that default currency is EUR when not specified."""
+        receipt = create_receipt(
+            db=db_session,
+            date=dt.date(2024, 1, 15),
+            store="Lidl",
+            total_amount=Decimal("45.99"),
+        )
+
+        assert receipt.currency == "EUR"
+
     def test_create_receipt_rolls_back_on_error(self, db_session) -> None:
         """Test that create_receipt rolls back and re-raises on database error."""
         # Trigger constraint violation with negative amount
