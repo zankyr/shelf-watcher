@@ -220,6 +220,12 @@ CREATE INDEX idx_receipts_store ON receipts(store);
 - [x] Category spending breakdown (pie/bar charts)
 - [x] Export functionality
 
+**Sprint 4: Edit/Delete (Week 4)**
+- [x] Delete receipt CRUD with cascade
+- [x] Update receipt with shared helper extraction
+- [x] Edit/Delete buttons in receipt history (two-step delete confirmation)
+- [x] Receipt form edit mode (pre-fill, update dispatch, cancel)
+
 ### Phase 2: OCR Integration (Future)
 - Receipt photo upload
 - OCR processing pipeline
@@ -572,6 +578,6 @@ When helping with this project:
 
 ---
 
-**Document Version**: 1.6
-**Last Updated**: 2026-02-12
-**Status**: Phase 1, Sprint 3 - Complete (Receipt History + Analytics)
+**Document Version**: 1.7
+**Last Updated**: 2026-02-14
+**Status**: Phase 1, Sprint 4 - Complete (Edit/Delete Receipts)
