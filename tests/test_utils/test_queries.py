@@ -230,6 +230,7 @@ class TestGetReceiptItems:
             "unit",
             "price_per_unit",
             "total_price",
+            "original_price",
             "normalized_price",
             "normalized_unit",
         ]
@@ -288,6 +289,7 @@ class TestGetFilteredItemsExport:
             "unit",
             "price_per_unit",
             "total_price",
+            "original_price",
             "normalized_price",
             "normalized_unit",
             "notes",

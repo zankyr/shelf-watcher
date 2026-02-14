@@ -101,6 +101,7 @@ def get_receipt_items(db: Session, receipt_id: int) -> pd.DataFrame:
             Item.unit,
             Item.price_per_unit,
             Item.total_price,
+            Item.original_price,
             Item.normalized_price,
             Item.normalized_unit,
         )
@@ -138,6 +139,7 @@ def get_filtered_items_export(
             Item.unit,
             Item.price_per_unit,
             Item.total_price,
+            Item.original_price,
             Item.normalized_price,
             Item.normalized_unit,
             Receipt.notes,
