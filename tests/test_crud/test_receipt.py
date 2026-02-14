@@ -6,8 +6,8 @@ from decimal import Decimal
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.database.crud import create_receipt, get_receipt, get_receipts
-from src.database.models import Receipt
+from src.database.crud import create_receipt, delete_receipt, get_receipt, get_receipts
+from src.database.models import Item, Receipt
 
 
 class TestCreateReceipt:
@@ -126,3 +126,69 @@ class TestGetReceipts:
         stores = [r.store for r in result]
         assert "Lidl" in stores
         assert "Albert Heijn" in stores
+
+
+class TestDeleteReceipt:
+    """Tests for delete_receipt function."""
+
+    def test_delete_existing_receipt(self, db_session) -> None:
+        """Deleting an existing receipt returns True and removes it."""
+        receipt = create_receipt(
+            db=db_session,
+            date=dt.date(2024, 1, 15),
+            store="Lidl",
+            total_amount=Decimal("45.99"),
+        )
+
+        result = delete_receipt(db_session, receipt.id)
+
+        assert result is True
+        assert get_receipt(db_session, receipt.id) is None
+
+    def test_delete_nonexistent_receipt(self, db_session) -> None:
+        """Deleting a non-existent receipt returns False."""
+        result = delete_receipt(db_session, 999)
+
+        assert result is False
+
+    def test_delete_cascades_to_items(self, db_session) -> None:
+        """Deleting a receipt also removes its items."""
+        receipt = create_receipt(
+            db=db_session,
+            date=dt.date(2024, 1, 15),
+            store="Lidl",
+            total_amount=Decimal("10.00"),
+        )
+        item = Item(
+            receipt_id=receipt.id,
+            name="Milk",
+            quantity=Decimal("1"),
+            unit="L",
+            total_price=Decimal("2.50"),
+        )
+        db_session.add(item)
+        db_session.commit()
+
+        delete_receipt(db_session, receipt.id)
+
+        assert db_session.query(Item).filter(Item.receipt_id == receipt.id).count() == 0
+
+    def test_delete_preserves_other_receipts(self, db_session) -> None:
+        """Deleting one receipt does not affect others."""
+        r1 = create_receipt(
+            db=db_session,
+            date=dt.date(2024, 1, 15),
+            store="Lidl",
+            total_amount=Decimal("45.99"),
+        )
+        r2 = create_receipt(
+            db=db_session,
+            date=dt.date(2024, 1, 16),
+            store="Albert Heijn",
+            total_amount=Decimal("32.50"),
+        )
+
+        delete_receipt(db_session, r1.id)
+
+        assert get_receipt(db_session, r1.id) is None
+        assert get_receipt(db_session, r2.id) is not None

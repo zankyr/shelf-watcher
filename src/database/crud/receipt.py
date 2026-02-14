@@ -87,3 +87,28 @@ def get_receipts(
     if limit is not None:
         query = query.limit(limit)
     return query.all()
+
+
+def delete_receipt(db: Session, receipt_id: int) -> bool:
+    """Delete a receipt and its items (via cascade).
+
+    Args:
+        db: Database session
+        receipt_id: Receipt ID to delete
+
+    Returns:
+        True if the receipt was found and deleted, False if not found.
+
+    Raises:
+        SQLAlchemyError: If database operation fails
+    """
+    receipt = db.query(Receipt).filter(Receipt.id == receipt_id).first()
+    if receipt is None:
+        return False
+    try:
+        db.delete(receipt)
+        db.commit()
+        return True
+    except SQLAlchemyError:
+        db.rollback()
+        raise
