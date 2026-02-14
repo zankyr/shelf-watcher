@@ -206,8 +206,73 @@ def update_receipt(
             db.close()
 
 
+_EDIT_STATE_KEYS = (
+    "editing_receipt_id",
+    "_edit_loaded",
+    "edit_receipt_date",
+    "edit_receipt_store",
+    "edit_receipt_notes",
+)
+
+
+def _clear_edit_state() -> None:
+    """Remove all edit-mode keys from session state."""
+    for key in _EDIT_STATE_KEYS:
+        st.session_state.pop(key, None)
+
+
+def _load_receipt_into_session_state(receipt_id: int) -> None:
+    """Fetch a receipt from the DB and populate session state for edit mode."""
+    db = SessionLocal()
+    try:
+        receipt = db.query(Receipt).filter(Receipt.id == receipt_id).first()
+        if receipt is None:
+            _clear_edit_state()
+            st.session_state["error_message"] = f"Receipt #{receipt_id} not found."
+            return
+
+        st.session_state["edit_receipt_date"] = receipt.date
+        st.session_state["edit_receipt_store"] = receipt.store
+        st.session_state["edit_receipt_notes"] = receipt.notes or ""
+
+        item_dicts: list[dict[str, Any]] = []
+        for item in receipt.items:
+            cat_name = _NO_CATEGORY
+            if item.category is not None:
+                cat_name = item.category.name
+            item_dicts.append(
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": item.name,
+                    "brand": item.brand or "",
+                    "category_selection": cat_name,
+                    "new_category_name": "",
+                    "quantity": float(item.quantity),
+                    "unit": item.unit,
+                    "total_price": float(item.total_price),
+                }
+            )
+
+        st.session_state["items"] = item_dicts if item_dicts else [_new_item_dict()]
+        st.session_state["_edit_loaded"] = True
+    finally:
+        db.close()
+
+
 def render_receipt_form() -> None:
     """Render the receipt entry form in Streamlit."""
+    # Detect edit mode
+    editing_id: int | None = st.session_state.get("editing_receipt_id")
+    is_edit = editing_id is not None
+
+    # Load receipt data once when entering edit mode
+    if is_edit and not st.session_state.get("_edit_loaded"):
+        assert editing_id is not None
+        _load_receipt_into_session_state(editing_id)
+        # Re-check — _load may have cleared edit state on error
+        if not st.session_state.get("editing_receipt_id"):
+            is_edit = False
+
     # Initialize session state (Streamlit's session_state uses dynamic attributes)
     if "items" not in st.session_state:
         st.session_state["items"] = [_new_item_dict()]
@@ -215,6 +280,13 @@ def render_receipt_form() -> None:
         st.session_state["success_message"] = None
     if "error_message" not in st.session_state:
         st.session_state["error_message"] = None
+
+    # Cancel edit button
+    if is_edit:
+        if st.button("Cancel edit"):
+            _clear_edit_state()
+            st.session_state["items"] = [_new_item_dict()]
+            st.rerun()
 
     # Show feedback messages
     if st.session_state["success_message"]:
@@ -231,13 +303,22 @@ def render_receipt_form() -> None:
     category_name_to_id = {c["name"]: c["id"] for c in category_options}
 
     # --- Receipt header ---
+    # Pre-fill defaults for edit mode
+    default_date = st.session_state.get("edit_receipt_date", "today") if is_edit else "today"
+    edit_store = st.session_state.get("edit_receipt_store", "") if is_edit else ""
+    default_notes = st.session_state.get("edit_receipt_notes", "") if is_edit else ""
+
     col_date, col_store = st.columns(2)
     with col_date:
-        receipt_date = st.date_input("Date", value="today")
+        receipt_date = st.date_input("Date", value=default_date)
     with col_store:
         store_options = store_names + [_NEW_STORE_SENTINEL]
+        # In edit mode, pre-select the store if it exists in the list
+        store_index = None
+        if is_edit and edit_store in store_options:
+            store_index = store_options.index(edit_store)
         store_selection = st.selectbox(
-            "Store", options=store_options, index=None, placeholder="Select a store..."
+            "Store", options=store_options, index=store_index, placeholder="Select a store..."
         )
         new_store_name = ""
         if store_selection == _NEW_STORE_SENTINEL:
@@ -319,10 +400,11 @@ def render_receipt_form() -> None:
         total = sum(item["total_price"] for item in st.session_state["items"])
         st.metric("Total", f"\u20ac{total:.2f}")
     with col_notes:
-        receipt_notes = st.text_area("Notes", value="", height=80)
+        receipt_notes = st.text_area("Notes", value=default_notes, height=80)
 
-    # --- Save ---
-    if st.button("Save Receipt", type="primary"):
+    # --- Save / Update ---
+    button_label = "Update Receipt" if is_edit else "Save Receipt"
+    if st.button(button_label, type="primary"):
         # Determine store name
         store = new_store_name if store_selection == _NEW_STORE_SENTINEL else store_selection
         if not store:
@@ -366,12 +448,24 @@ def render_receipt_form() -> None:
             return
 
         try:
-            receipt = save_receipt(receipt_form)
-            st.session_state["items"] = [_new_item_dict()]
-            st.session_state["success_message"] = (
-                f"Receipt saved! (ID: {receipt.id}, Total: \u20ac{receipt.total_amount:.2f})"
-            )
+            if is_edit:
+                assert editing_id is not None
+                receipt = update_receipt(editing_id, receipt_form)
+                _clear_edit_state()
+                st.session_state["items"] = [_new_item_dict()]
+                st.session_state["success_message"] = (
+                    f"Receipt updated! (ID: {receipt.id}, "
+                    f"Total: \u20ac{receipt.total_amount:.2f})"
+                )
+            else:
+                receipt = save_receipt(receipt_form)
+                st.session_state["items"] = [_new_item_dict()]
+                st.session_state["success_message"] = (
+                    f"Receipt saved! (ID: {receipt.id}, "
+                    f"Total: \u20ac{receipt.total_amount:.2f})"
+                )
             st.rerun()
         except Exception as e:
-            st.session_state["error_message"] = f"Error saving receipt: {e}"
+            action = "updating" if is_edit else "saving"
+            st.session_state["error_message"] = f"Error {action} receipt: {e}"
             st.rerun()
