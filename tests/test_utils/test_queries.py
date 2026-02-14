@@ -397,6 +397,18 @@ class TestGetPriceTrends:
         df = get_price_trends(db_session, item_names=["Milk"])
         assert str(df.iloc[0]["date"]) == "2026-01-01"
 
+    def test_currency_filter(self, db_session):
+        r1 = _make_receipt(db_session, currency="EUR")
+        _make_item(db_session, r1, name="Milk")
+        r2 = _make_receipt(db_session, currency="CHF")
+        _make_item(db_session, r2, name="Milk")
+        db_session.commit()
+
+        df_eur = get_price_trends(db_session, item_names=["Milk"], currency="EUR")
+        df_chf = get_price_trends(db_session, item_names=["Milk"], currency="CHF")
+        assert len(df_eur) == 1
+        assert len(df_chf) == 1
+
 
 # ---------------------------------------------------------------------------
 # get_store_comparison
@@ -471,6 +483,17 @@ class TestGetStoreComparison:
         df = get_store_comparison(db_session, item_names=["whole milk"])
         assert len(df) == 1
 
+    def test_currency_filter(self, db_session):
+        r1 = _make_receipt(db_session, store="Lidl", currency="EUR")
+        _make_item(db_session, r1, name="Milk")
+        r2 = _make_receipt(db_session, store="Migros", currency="CHF")
+        _make_item(db_session, r2, name="Milk")
+        db_session.commit()
+
+        df = get_store_comparison(db_session, item_names=["Milk"], currency="EUR")
+        assert len(df) == 1
+        assert df.iloc[0]["store"] == "Lidl"
+
 
 # ---------------------------------------------------------------------------
 # get_category_spending
@@ -541,6 +564,17 @@ class TestGetCategorySpending:
         df = get_category_spending(db_session)
         assert len(df) == 0
 
+    def test_currency_filter(self, db_session):
+        r1 = _make_receipt(db_session, currency="EUR")
+        _make_item(db_session, r1, total_price=Decimal("10.00"))
+        r2 = _make_receipt(db_session, currency="CHF")
+        _make_item(db_session, r2, total_price=Decimal("20.00"))
+        db_session.commit()
+
+        df = get_category_spending(db_session, currency="CHF")
+        assert len(df) == 1
+        assert float(df.iloc[0]["total_spent"]) == 20.0
+
 
 # ---------------------------------------------------------------------------
 # get_monthly_spending
@@ -602,6 +636,17 @@ class TestGetMonthlySpending:
     def test_empty_database(self, db_session):
         df = get_monthly_spending(db_session)
         assert len(df) == 0
+
+    def test_currency_filter(self, db_session):
+        r1 = _make_receipt(db_session, date=dt.date(2026, 1, 15), currency="EUR")
+        _make_item(db_session, r1, total_price=Decimal("10.00"))
+        r2 = _make_receipt(db_session, date=dt.date(2026, 1, 15), currency="CHF")
+        _make_item(db_session, r2, total_price=Decimal("20.00"))
+        db_session.commit()
+
+        df = get_monthly_spending(db_session, currency="EUR")
+        assert len(df) == 1
+        assert float(df.iloc[0]["total_spent"]) == 10.0
 
 
 # ---------------------------------------------------------------------------

@@ -165,6 +165,7 @@ def get_price_trends(
     item_names: list[str] | None = None,
     date_from: dt.date | None = None,
     date_to: dt.date | None = None,
+    currency: str = "EUR",
 ) -> pd.DataFrame:
     """Get price data over time for selected items.
 
@@ -181,6 +182,7 @@ def get_price_trends(
         )
         .join(Item, Item.receipt_id == Receipt.id)
         .where(Item.normalized_price.isnot(None))
+        .where(Receipt.currency == currency)
     )
 
     if item_names:
@@ -200,6 +202,7 @@ def get_store_comparison(
     *,
     item_names: list[str] | None = None,
     category_id: int | None = None,
+    currency: str = "EUR",
 ) -> pd.DataFrame:
     """Get price statistics grouped by store.
 
@@ -217,6 +220,7 @@ def get_store_comparison(
         )
         .join(Item, Item.receipt_id == Receipt.id)
         .where(Item.normalized_price.isnot(None))
+        .where(Receipt.currency == currency)
         .group_by(Receipt.store)
     )
 
@@ -234,6 +238,7 @@ def get_category_spending(
     *,
     date_from: dt.date | None = None,
     date_to: dt.date | None = None,
+    currency: str = "EUR",
 ) -> pd.DataFrame:
     """Get total spending grouped by category.
 
@@ -250,6 +255,7 @@ def get_category_spending(
         .select_from(Receipt)
         .join(Item, Item.receipt_id == Receipt.id)
         .outerjoin(Category, Item.category_id == Category.id)
+        .where(Receipt.currency == currency)
         .group_by(cat_label)
     )
 
@@ -266,6 +272,7 @@ def get_monthly_spending(
     *,
     date_from: dt.date | None = None,
     date_to: dt.date | None = None,
+    currency: str = "EUR",
 ) -> pd.DataFrame:
     """Get spending by month and category.
 
@@ -282,6 +289,7 @@ def get_monthly_spending(
         )
         .join(Item, Item.receipt_id == Receipt.id)
         .outerjoin(Category, Item.category_id == Category.id)
+        .where(Receipt.currency == currency)
         .group_by(month_label, cat_label)
     )
 
