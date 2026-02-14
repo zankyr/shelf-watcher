@@ -14,6 +14,7 @@ from src.utils.queries import (
     get_receipt_list,
     parse_date_range,
 )
+from src.utils.validators import CURRENCY_SYMBOLS
 
 
 def render_receipt_history() -> None:
@@ -94,13 +95,15 @@ def _render_filters_and_list(db: Session) -> None:
         receipt_id = int(row["receipt_id"])
         date_str = str(row["date"])
         store = row["store"]
+        currency = row["currency"]
+        symbol = CURRENCY_SYMBOLS.get(currency, currency)
         total = float(row["total_amount"])
         item_count = int(row["item_count"])
         notes = row["notes"]
 
         label = (
             f"{date_str} | {store} | "
-            f"\u20ac{total:.2f} | "
+            f"{symbol}{total:.2f} | "
             f"{item_count} item{'s' if item_count != 1 else ''}"
         )
         with st.expander(label):

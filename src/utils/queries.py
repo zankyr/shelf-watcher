@@ -47,6 +47,7 @@ def get_receipt_list(
             Receipt.id.label("receipt_id"),
             Receipt.date,
             Receipt.store,
+            Receipt.currency,
             Receipt.total_amount,
             item_count,
             Receipt.notes,
@@ -129,6 +130,7 @@ def get_filtered_items_export(
         select(
             Receipt.date,
             Receipt.store,
+            Receipt.currency,
             Item.name.label("item_name"),
             Item.brand,
             Category.name.label("category"),

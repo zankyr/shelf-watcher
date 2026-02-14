@@ -77,6 +77,7 @@ class TestGetReceiptList:
             "receipt_id",
             "date",
             "store",
+            "currency",
             "total_amount",
             "item_count",
             "notes",
@@ -279,6 +280,7 @@ class TestGetFilteredItemsExport:
         assert list(df.columns) == [
             "date",
             "store",
+            "currency",
             "item_name",
             "brand",
             "category",
