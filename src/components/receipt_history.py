@@ -6,6 +6,7 @@ import streamlit as st
 from sqlalchemy.orm import Session
 
 from src.database.connection import SessionLocal
+from src.database.crud import delete_receipt
 from src.utils.queries import (
     get_distinct_store_names,
     get_filtered_items_export,
@@ -17,6 +18,11 @@ from src.utils.queries import (
 
 def render_receipt_history() -> None:
     """Render the receipt history page with filters and inline detail expanders."""
+    # Show feedback message from a previous action (e.g. delete)
+    if st.session_state.get("history_success_message"):
+        st.success(st.session_state["history_success_message"])
+        st.session_state["history_success_message"] = None
+
     db = SessionLocal()
     try:
         _render_filters_and_list(db)
@@ -106,3 +112,32 @@ def _render_filters_and_list(db: Session) -> None:
                 st.caption("No items recorded.")
             if notes:
                 st.caption(f"Notes: {notes}")
+
+            # --- Edit / Delete actions ---
+            confirm_key = f"confirm_delete_{receipt_id}"
+
+            if st.session_state.get(confirm_key):
+                st.warning("Are you sure you want to delete this receipt?")
+                col_yes, col_no, _ = st.columns([1, 1, 4])
+                with col_yes:
+                    if st.button("Yes, delete", key=f"yes_del_{receipt_id}", type="primary"):
+                        delete_receipt(db, receipt_id)
+                        st.session_state[confirm_key] = False
+                        st.session_state["history_success_message"] = (
+                            f"Receipt #{receipt_id} deleted."
+                        )
+                        st.rerun()
+                with col_no:
+                    if st.button("Cancel", key=f"cancel_del_{receipt_id}"):
+                        st.session_state[confirm_key] = False
+                        st.rerun()
+            else:
+                col_edit, col_delete, _ = st.columns([1, 1, 4])
+                with col_edit:
+                    if st.button("Edit", key=f"edit_{receipt_id}"):
+                        st.session_state["editing_receipt_id"] = receipt_id
+                        st.switch_page("src/pages/1_receipt_entry.py")
+                with col_delete:
+                    if st.button("Delete", key=f"del_{receipt_id}"):
+                        st.session_state[confirm_key] = True
+                        st.rerun()
