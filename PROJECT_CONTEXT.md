@@ -100,6 +100,7 @@ CREATE TABLE receipts (
     date DATE NOT NULL,
     store TEXT NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
+    currency VARCHAR(3) NOT NULL DEFAULT 'EUR',  -- EUR or CHF
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -120,6 +121,7 @@ CREATE TABLE items (
     unit TEXT NOT NULL,  -- kg, L, units, g, ml, etc.
     price_per_unit DECIMAL(10, 2),
     total_price DECIMAL(10, 2) NOT NULL,
+    original_price DECIMAL(10, 2),  -- nullable, pre-discount price
     normalized_price DECIMAL(10, 2),  -- price per kg or L
     normalized_unit TEXT,  -- kg or L
     notes TEXT,
@@ -172,6 +174,8 @@ CREATE INDEX idx_receipts_store ON receipts(store);
 3. **Hierarchical Categories**: Parent-child relationships for category organization (e.g., Dairy > Milk)
 4. **Soft Store References**: Store names as text in receipts, but maintain stores table for autocomplete
 5. **Audit Trail**: created_at/updated_at timestamps on all tables
+6. **Per-receipt Currency**: EUR or CHF stored per receipt; analytics kept separate (no conversion)
+7. **Item Discounts**: Nullable `original_price` on items; discount computed as `original_price - total_price` in UI only
 
 ---
 
@@ -225,6 +229,22 @@ CREATE INDEX idx_receipts_store ON receipts(store);
 - [x] Update receipt with shared helper extraction
 - [x] Edit/Delete buttons in receipt history (two-step delete confirmation)
 - [x] Receipt form edit mode (pre-fill, update dispatch, cancel)
+
+**Sprint 5: Multi-currency & Item Discounts (Week 5)**
+- [x] Multi-currency support (EUR + CHF)
+  - [x] `currency` column on receipts (default EUR, check constraint)
+  - [x] `VALID_CURRENCIES` / `CURRENCY_SYMBOLS` constants in validators
+  - [x] Currency selector in receipt form with dynamic symbols
+  - [x] Currency displayed in receipt history
+  - [x] Currency filter on all analytics queries (no cross-currency mixing)
+  - [x] Idempotent DB migration for existing databases
+- [x] Item-level discounts (original price)
+  - [x] `original_price` column on items (nullable, non-negative constraint)
+  - [x] Validation: `original_price >= total_price` when set
+  - [x] "Orig." input per item row in receipt form (8-column layout)
+  - [x] "Saved" caption shown when discount present
+  - [x] `original_price` included in receipt detail + CSV export
+  - [x] Discount is computed in UI only (`original_price - total_price`), not stored
 
 ### Phase 2: OCR Integration (Future)
 - Receipt photo upload
@@ -448,6 +468,7 @@ class Receipt:
     date: date
     store: str
     total_amount: Decimal
+    currency: str = "EUR"  # EUR or CHF
     notes: Optional[str] = None
 
 @dataclass
@@ -461,8 +482,9 @@ class Item:
     unit: str
     price_per_unit: Optional[Decimal]
     total_price: Decimal
-    normalized_price: Optional[Decimal]
-    normalized_unit: Optional[str]
+    original_price: Optional[Decimal] = None  # pre-discount price
+    normalized_price: Optional[Decimal] = None
+    normalized_unit: Optional[str] = None
     notes: Optional[str] = None
 
 @dataclass
@@ -578,6 +600,6 @@ When helping with this project:
 
 ---
 
-**Document Version**: 1.7
+**Document Version**: 1.8
 **Last Updated**: 2026-02-14
-**Status**: Phase 1, Sprint 4 - Complete (Edit/Delete Receipts)
+**Status**: Phase 1, Sprint 5 - Complete (Multi-currency & Item Discounts)
