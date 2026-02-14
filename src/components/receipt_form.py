@@ -56,6 +56,56 @@ def _new_item_dict() -> dict[str, Any]:
     }
 
 
+def _resolve_categories_and_store(db: Session, receipt_data: ReceiptFormData) -> None:
+    """Resolve new categories (dedup by name) and auto-create the store if needed.
+
+    Mutates ``item_data.category_id`` for items that specify ``new_category_name``.
+    """
+    category_cache: dict[str, int] = {}
+    for item_data in receipt_data.items:
+        if item_data.new_category_name:
+            name = item_data.new_category_name
+            if name not in category_cache:
+                existing = db.query(Category).filter(Category.name == name).first()
+                if existing:
+                    category_cache[name] = existing.id
+                else:
+                    cat = Category(name=name)
+                    db.add(cat)
+                    db.flush()
+                    category_cache[name] = cat.id
+            item_data.category_id = category_cache[name]
+
+    store_name = receipt_data.store
+    existing_store = db.query(Store).filter(Store.name == store_name).first()
+    if not existing_store:
+        db.add(Store(name=store_name))
+        db.flush()
+
+
+def _create_items_for_receipt(db: Session, receipt_id: int, items: list[ItemFormData]) -> None:
+    """Create Item rows with price calculation for a receipt."""
+    for item_data in items:
+        price_per_unit = calculate_price_per_unit(item_data.quantity, item_data.total_price)
+        norm_price, norm_unit = normalize_price(
+            item_data.quantity, item_data.unit, item_data.total_price
+        )
+
+        item = Item(
+            receipt_id=receipt_id,
+            name=item_data.name,
+            brand=item_data.brand or None,
+            category_id=item_data.category_id,
+            quantity=item_data.quantity,
+            unit=item_data.unit,
+            price_per_unit=price_per_unit,
+            total_price=item_data.total_price,
+            normalized_price=norm_price,
+            normalized_unit=norm_unit,
+        )
+        db.add(item)
+
+
 def save_receipt(receipt_data: ReceiptFormData, db: Session | None = None) -> Receipt:
     """Atomically save a validated receipt with all its items.
 
@@ -78,30 +128,8 @@ def save_receipt(receipt_data: ReceiptFormData, db: Session | None = None) -> Re
     assert db is not None  # guaranteed after conditional above
 
     try:
-        # Resolve new categories (deduplicate by name within this receipt)
-        category_cache: dict[str, int] = {}
-        for item_data in receipt_data.items:
-            if item_data.new_category_name:
-                name = item_data.new_category_name
-                if name not in category_cache:
-                    existing = db.query(Category).filter(Category.name == name).first()
-                    if existing:
-                        category_cache[name] = existing.id
-                    else:
-                        cat = Category(name=name)
-                        db.add(cat)
-                        db.flush()
-                        category_cache[name] = cat.id
-                item_data.category_id = category_cache[name]
+        _resolve_categories_and_store(db, receipt_data)
 
-        # Auto-create store if it doesn't exist
-        store_name = receipt_data.store
-        existing_store = db.query(Store).filter(Store.name == store_name).first()
-        if not existing_store:
-            db.add(Store(name=store_name))
-            db.flush()
-
-        # Create receipt
         receipt = Receipt(
             date=receipt_data.date,
             store=receipt_data.store,
@@ -111,26 +139,60 @@ def save_receipt(receipt_data: ReceiptFormData, db: Session | None = None) -> Re
         db.add(receipt)
         db.flush()
 
-        # Create items with normalized prices
-        for item_data in receipt_data.items:
-            price_per_unit = calculate_price_per_unit(item_data.quantity, item_data.total_price)
-            norm_price, norm_unit = normalize_price(
-                item_data.quantity, item_data.unit, item_data.total_price
-            )
+        _create_items_for_receipt(db, receipt.id, receipt_data.items)
 
-            item = Item(
-                receipt_id=receipt.id,
-                name=item_data.name,
-                brand=item_data.brand or None,
-                category_id=item_data.category_id,
-                quantity=item_data.quantity,
-                unit=item_data.unit,
-                price_per_unit=price_per_unit,
-                total_price=item_data.total_price,
-                normalized_price=norm_price,
-                normalized_unit=norm_unit,
-            )
-            db.add(item)
+        db.commit()
+        db.refresh(receipt)
+        return receipt
+
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        if owns_session:
+            db.close()
+
+
+def update_receipt(
+    receipt_id: int, receipt_data: ReceiptFormData, db: Session | None = None
+) -> Receipt:
+    """Atomically update an existing receipt and replace all its items.
+
+    Args:
+        receipt_id: ID of the receipt to update.
+        receipt_data: Validated receipt form data with new values.
+        db: Optional database session (for testing). Creates one if not provided.
+
+    Returns:
+        The updated Receipt object.
+
+    Raises:
+        ValueError: If the receipt does not exist.
+        Exception: Re-raises any exception after rolling back the transaction.
+    """
+    owns_session = db is None
+    if owns_session:
+        db = SessionLocal()
+    assert db is not None
+
+    try:
+        receipt = db.query(Receipt).filter(Receipt.id == receipt_id).first()
+        if receipt is None:
+            raise ValueError(f"Receipt with id {receipt_id} not found")
+
+        _resolve_categories_and_store(db, receipt_data)
+
+        # Update receipt fields
+        receipt.date = receipt_data.date
+        receipt.store = receipt_data.store
+        receipt.total_amount = receipt_data.total_amount
+        receipt.notes = receipt_data.notes or None
+
+        # Delete all old items, then recreate
+        db.query(Item).filter(Item.receipt_id == receipt_id).delete()
+        db.flush()
+
+        _create_items_for_receipt(db, receipt_id, receipt_data.items)
 
         db.commit()
         db.refresh(receipt)

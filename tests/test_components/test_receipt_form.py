@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import pytest
 
-from src.components.receipt_form import save_receipt
+from src.components.receipt_form import save_receipt, update_receipt
 from src.database.models.category import Category
 from src.database.models.item import Item
 from src.database.models.receipt import Receipt
@@ -161,3 +161,108 @@ class TestSaveReceipt:
         """Empty notes should be stored as None."""
         receipt = save_receipt(_receipt(notes=""), db=db_session)
         assert receipt.notes is None
+
+
+class TestUpdateReceipt:
+    """Tests for the update_receipt() function."""
+
+    def test_basic_update(self, db_session: object) -> None:
+        """Updating a receipt changes its fields."""
+        receipt = save_receipt(_receipt(store="Lidl", notes="old"), db=db_session)
+
+        updated = update_receipt(
+            receipt.id,
+            _receipt(store="Albert Heijn", notes="new"),
+            db=db_session,
+        )
+
+        assert updated.id == receipt.id
+        assert updated.store == "Albert Heijn"
+        assert updated.notes == "new"
+
+    def test_update_replaces_items(self, db_session: object) -> None:
+        """Updating a receipt replaces all old items with new ones."""
+        receipt = save_receipt(
+            _receipt(items=[_item(name="Milk")]),
+            db=db_session,
+        )
+
+        update_receipt(
+            receipt.id,
+            _receipt(items=[_item(name="Bread"), _item(name="Cheese")]),
+            db=db_session,
+        )
+
+        new_items = db_session.query(Item).filter(Item.receipt_id == receipt.id).all()
+        assert len(new_items) == 2
+        assert {i.name for i in new_items} == {"Bread", "Cheese"}
+
+    def test_update_nonexistent_raises(self, db_session: object) -> None:
+        """Updating a non-existent receipt raises ValueError."""
+        with pytest.raises(ValueError, match="not found"):
+            update_receipt(999, _receipt(), db=db_session)
+
+    def test_update_new_category_created(self, db_session: object) -> None:
+        """A new category referenced in the update should be created."""
+        receipt = save_receipt(_receipt(), db=db_session)
+
+        update_receipt(
+            receipt.id,
+            _receipt(items=[_item(new_category_name="Dairy")]),
+            db=db_session,
+        )
+
+        cat = db_session.query(Category).filter(Category.name == "Dairy").first()
+        assert cat is not None
+
+    def test_update_new_store_auto_created(self, db_session: object) -> None:
+        """A new store name in the update should be auto-created."""
+        receipt = save_receipt(_receipt(store="Lidl"), db=db_session)
+
+        update_receipt(receipt.id, _receipt(store="NewShop"), db=db_session)
+
+        store = db_session.query(Store).filter(Store.name == "NewShop").first()
+        assert store is not None
+
+    def test_update_normalized_prices_recalculated(self, db_session: object) -> None:
+        """Updated items should have normalized prices recalculated."""
+        receipt = save_receipt(_receipt(), db=db_session)
+
+        update_receipt(
+            receipt.id,
+            _receipt(items=[_item(quantity=Decimal("500"), unit="g", total_price=Decimal("3.00"))]),
+            db=db_session,
+        )
+
+        item = db_session.query(Item).filter(Item.receipt_id == receipt.id).first()
+        assert item.normalized_unit == "kg"
+        assert item.normalized_price == Decimal("6.00")
+
+    def test_update_rollback_on_error(self, db_session: object) -> None:
+        """If an error occurs during update, the transaction should be rolled back."""
+        from unittest.mock import patch
+
+        receipt = save_receipt(_receipt(store="Lidl"), db=db_session)
+        original_store = receipt.store
+
+        with patch(
+            "src.components.receipt_form.normalize_price",
+            side_effect=RuntimeError("Forced error"),
+        ):
+            with pytest.raises(RuntimeError, match="Forced error"):
+                update_receipt(receipt.id, _receipt(store="NewStore"), db=db_session)
+
+        db_session.refresh(receipt)
+        assert receipt.store == original_store
+
+    def test_update_total_amount_recalculated(self, db_session: object) -> None:
+        """The total_amount should reflect the new items after update."""
+        receipt = save_receipt(_receipt(), db=db_session)
+
+        items = [
+            _item(name="A", total_price=Decimal("3.00")),
+            _item(name="B", total_price=Decimal("7.00")),
+        ]
+        updated = update_receipt(receipt.id, _receipt(items=items), db=db_session)
+
+        assert updated.total_amount == Decimal("10.00")
